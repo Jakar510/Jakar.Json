@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<!-- Native AOT smoke test for Jakar.Json: dotnet publish AotCompatibility.TestApp -c Release -r win-x64 -warnaserror, and the published exe must exit 0. -->
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net10.0</TargetFramework>
+		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<IsPackable>false</IsPackable>
+		<PublishAot>true</PublishAot>
+		<!-- Report every trim/AOT warning individually instead of one per assembly. -->
+		<TrimmerSingleWarn>false</TrimmerSingleWarn>
+	</PropertyGroup>
+
+	<!-- TrimAnalysis=true: IL linker analysis of the rooted libraries (no native toolchain needed). -->
+	<PropertyGroup Condition="'$(TrimAnalysis)' == 'true'">
+		<PublishAot>false</PublishAot>
+		<PublishTrimmed>true</PublishTrimmed>
+		<SelfContained>true</SelfContained>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Jakar.Json\Jakar.Json.csproj" />
+		<!-- A ProjectReference doesn't carry package analyzers; consumers of the Jakar.Json package get the generator automatically. -->
+		<ProjectReference Include="..\Jakar.Json.Generator\Jakar.Json.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+	</ItemGroup>
+
+	<!-- RootLibraries=true (default): analyze the whole libraries, not just what Main touches. RootLibraries=false: trim from Main, like a real app. -->
+	<ItemGroup Condition="'$(RootLibraries)' != 'false'">
+		<TrimmerRootAssembly Include="Jakar.Json" />
+		<TrimmerRootAssembly Include="Jakar.Spans" />
+	</ItemGroup>
+</Project>

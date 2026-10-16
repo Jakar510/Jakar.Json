@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<!-- Jakar.Json vs System.Text.Json (source generated) vs Newtonsoft.Json. Run: dotnet run -c Release, then pick JakarJson_Benchmarks (or pass a BenchmarkDotNet filter). -->
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net10.0</TargetFramework>
+		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<IsPackable>false</IsPackable>
+		<Optimize>true</Optimize>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="BenchmarkDotNet" />
+		<PackageReference Include="BenchmarkDotNet.Exporters.Plotting" />
+		<PackageReference Include="Newtonsoft.Json" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Jakar.Json\Jakar.Json.csproj" />
+		<ProjectReference Include="..\Jakar.Json.Generator\Jakar.Json.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+	</ItemGroup>
+</Project>
