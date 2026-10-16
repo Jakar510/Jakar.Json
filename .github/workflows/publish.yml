@@ -1,0 +1,71 @@
+name: Publish
+
+# Every push to master runs CI, packs Jakar.Json and Jakar.Json.AspNetCore and pushes them to nuget.org, in dependency order.
+# A version that's already there is skipped, so a release is a commit that bumps <Version> in the project file
+# (<.NET major>.<library major>.<library minor>). Jakar.Spans must be on nuget.org first (it's published from its own repository).
+#
+# nuget.org Trusted Publishing (no stored API key): the repository needs
+#   - a Trusted Publishing policy on nuget.org: owner Jakar510, repository Jakar.Json, workflow file publish.yml;
+#   - the secret NUGET_USER: the nuget.org profile name (not the email address).
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    name: Pack and push to nuget.org
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # GitHub OIDC token for nuget.org Trusted Publishing
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Use nuget.org only
+        run: dotnet nuget remove source LocalNuGet --configfile nuget.config
+
+      # Jakar.Json packs its source generator and code fixes (analyzers/dotnet/cs) from their Release builds.
+      - name: Pack
+        run: |
+          dotnet pack Jakar.Json/Jakar.Json.csproj -c Release -o artifacts/1-json
+          dotnet pack Jakar.Json.AspNetCore/Jakar.Json.AspNetCore.csproj -c Release -o artifacts/2-aspnetcore
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: packages
+          path: artifacts/**
+
+      - name: NuGet login (OIDC → short-lived API key)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
+      # Jakar.Json first: Jakar.Json.AspNetCore depends on it. Each push also sends the .snupkg next to the .nupkg.
+      - name: Push Jakar.Json
+        run: dotnet nuget push "artifacts/1-json/*.nupkg" --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+      - name: Push Jakar.Json.AspNetCore
+        run: dotnet nuget push "artifacts/2-aspnetcore/*.nupkg" --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate

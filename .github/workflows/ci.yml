@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches-ignore: [ master ] # master runs CI through publish.yml
+  pull_request:
+  workflow_call: # publish.yml runs this first
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  test:
+    name: Build and test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      # nuget.config's local feed (W:\WorkSpace\LocalNuGet) only exists on the dev machine; Jakar.Spans comes from nuget.org here.
+      - name: Use nuget.org only
+        run: dotnet nuget remove source LocalNuGet --configfile nuget.config
+
+      - name: Restore
+        run: dotnet restore Jakar.Json.slnx
+
+      - name: Build
+        run: dotnet build Jakar.Json.slnx -c Release --no-restore
+
+      - name: Test
+        run: dotnet test Jakar.Json.slnx -c Release --no-build --logger "trx;LogFilePrefix=${{ matrix.os }}"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.os }}
+          path: "**/TestResults/*.trx"
+          if-no-files-found: ignore
+
+  aot:
+    name: Native AOT and trimming
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Use nuget.org only
+        run: dotnet nuget remove source LocalNuGet --configfile nuget.config
+
+      - name: Native toolchain
+        run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
+
+      # The whole of Jakar.Json and Jakar.Spans rooted: every trim warning in the libraries, not just what the app reaches.
+      - name: Trim analysis (rooted libraries)
+        run: dotnet publish AotCompatibility.TestApp -c Release -r linux-x64 -p:TrimAnalysis=true -p:ILLinkTreatWarningsAsErrors=true -o trim
+
+      # A real native executable, trimmed from Main like an app; every check must pass in it.
+      - name: Native AOT publish
+        run: dotnet publish AotCompatibility.TestApp -c Release -r linux-x64 -p:RootLibraries=false -p:IlcTreatWarningsAsErrors=true -p:ILLinkTreatWarningsAsErrors=true -o aot
+
+      - name: Run the native checks
+        run: ./aot/AotCompatibility.TestApp

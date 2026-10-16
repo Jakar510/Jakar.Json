@@ -15,7 +15,7 @@
 
 	<ItemGroup>
 		<!-- Pinned to an older Roslyn on purpose: the generator then loads in any compiler at least this new (.NET 9 SDK / VS 17.12+). -->
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="4.12.0" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="5.9.0" PrivateAssets="all" />
 		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
 	</ItemGroup>
 

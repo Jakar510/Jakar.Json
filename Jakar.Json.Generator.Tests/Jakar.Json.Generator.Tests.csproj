@@ -17,7 +17,7 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<!-- Same Roslyn the generator is built against. -->
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="4.12.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="5.9.0" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
 	</ItemGroup>
 
