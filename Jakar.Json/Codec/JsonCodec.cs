@@ -110,34 +110,55 @@ public static partial class JsonCodec
         finally { writer.Dispose(); }
     }
 
-    /// <summary> Writes UTF-8 into <paramref name="output"/> (one copy from pooled scratch space). </summary>
-    public static void WriteJson<T>( in T value, IBufferWriter<byte> output, JsonWriterOptions? options = null )
+    /// <summary> Writes UTF-8 into <paramref name="output"/> (one copy from stack or pooled scratch space), e.g. an ASP.NET Core <c>PipeWriter</c> or an <see cref="ArrayBufferWriter{T}"/>. </summary>
+    /// <typeparam name="TWriter"> Any <see cref="IBufferWriter{T}"/>: a class, a struct or a <see langword="ref struct"/>. Passed by <see langword="ref"/>, so a struct writer's writes land in the caller's instance and nothing is boxed. </typeparam>
+    public static void WriteJson<T, TWriter>( in T value, ref TWriter output, JsonWriterOptions? options = null )
         where T : IJsonSerializable<T>
+        where TWriter : IBufferWriter<byte>, allows ref struct
     {
-        ArgumentNullException.ThrowIfNull(output);
         JsonUtf8Writer writer = new(stackalloc byte[STACK_CHARS], options ?? T.DefaultWriterOptions);
 
         try
         {
             T.WriteJson(ref writer, in value);
-            output.Write(writer.Written);
+            CopyTo(writer.Written, ref output);
         }
         finally { writer.Dispose(); }
     }
 
-    /// <summary> Writes UTF-16 into <paramref name="output"/>. </summary>
-    public static void WriteJson<T>( in T value, IBufferWriter<char> output, JsonWriterOptions? options = null )
+    /// <summary> Writes UTF-16 into <paramref name="output"/> (one copy from stack or pooled scratch space). </summary>
+    /// <typeparam name="TWriter"> Any <see cref="IBufferWriter{T}"/> of <see cref="char"/>: a class, a struct or a <see langword="ref struct"/>, passed by <see langword="ref"/>. </typeparam>
+    public static void WriteJsonUtf16<T, TWriter>( in T value, ref TWriter output, JsonWriterOptions? options = null )
         where T : IJsonSerializable<T>
+        where TWriter : IBufferWriter<char>, allows ref struct
     {
-        ArgumentNullException.ThrowIfNull(output);
         JsonWriter writer = new(stackalloc char[STACK_CHARS], options ?? T.DefaultWriterOptions);
 
         try
         {
             T.WriteJson(ref writer, in value);
-            output.Write(writer.Written);
+            CopyTo(writer.Written, ref output);
         }
         finally { writer.Dispose(); }
+    }
+
+    /// <summary>
+    ///     <paramref name="source"/> into <paramref name="output"/>, in as many <see cref="IBufferWriter{T}.GetSpan"/> chunks as the writer hands out. The BCL's
+    ///     <c>IBufferWriter&lt;T&gt;.Write</c> extension takes the interface, which would box a struct writer and can't take a <see langword="ref struct"/>.
+    /// </summary>
+    internal static void CopyTo<TChar, TWriter>( scoped ReadOnlySpan<TChar> source, ref TWriter output )
+        where TWriter : IBufferWriter<TChar>, allows ref struct
+    {
+        while ( !source.IsEmpty )
+        {
+            Span<TChar> destination = output.GetSpan(source.Length);
+            if ( destination.IsEmpty ) { throw new InvalidOperationException($"{typeof(TWriter).Name}.GetSpan returned an empty span."); }
+
+            int count = Math.Min(destination.Length, source.Length);
+            source[..count].CopyTo(destination);
+            output.Advance(count);
+            source = source[count..];
+        }
     }
 
     /// <summary> Appends the JSON to <paramref name="builder"/>. </summary>

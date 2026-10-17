@@ -90,8 +90,8 @@ Output is compact unless indented, with `" : "` between names and values: `{"id"
 
 - **Root arrays:** `ToJsonArray`, `FromJsonArray`, `FromJsonList`, and `FromJsonArrayPooled`, which returns a pooled buffer you dispose.
 - **NDJSON:** `ReadLines<T>` / `ReadLinesAsync<T>` and `WriteLines<T>`. Memory is bounded by the longest line.
-- **Inputs:** `ReadOnlySequence<byte>`, `TextReader` / `TextWriter`, `IBufferWriter<byte|char>`, and appending to a `ValueStringBuilder`.
-- **By `Type` at run time:** `JsonCodecRegistry.TryGet(type, out JsonTypeCodec codec)`, then `codec.Read(...)` / `codec.Write(value, bufferWriter)`. For frameworks that pick a serializer per type. Each assembly's generated module initializer registers its non-generic `[JsonModel]` types, and lookups also resolve `T[]`, `List<T>` and the common collection interfaces of them. No reflection. [Jakar.Json.AspNetCore](https://github.com/Jakar510/Jakar.Json/blob/master/Jakar.Json.AspNetCore/README.md) uses it for MVC and minimal APIs.
+- **Inputs and outputs:** `ReadOnlySequence<byte>`, `TextReader` / `TextWriter`, appending to a `ValueStringBuilder`, and any buffer writer: `WriteJson(value, ref writer)` (UTF-8) and `WriteJsonUtf16(value, ref writer)` take a generic `TWriter : IBufferWriter<…>` by `ref`, so struct and `ref struct` writers work without boxing.
+- **By `Type` at run time:** `JsonCodecRegistry.TryGet(type, out JsonTypeCodec codec)`, then `codec.Read(...)` / `codec.Write(value, ref bufferWriter)`. For frameworks that pick a serializer per type. Each assembly's generated module initializer registers its non-generic `[JsonModel]` types, and lookups also resolve `T[]`, `List<T>` and the common collection interfaces of them. No reflection. [Jakar.Json.AspNetCore](https://github.com/Jakar510/Jakar.Json/blob/master/Jakar.Json.AspNetCore/README.md) uses it for MVC and minimal APIs.
 
 ## Dynamic JSON
 

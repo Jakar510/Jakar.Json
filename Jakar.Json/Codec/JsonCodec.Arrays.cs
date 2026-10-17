@@ -48,33 +48,34 @@ public static partial class JsonCodec
         finally { writer.Dispose(); }
     }
 
-    /// <summary> Writes a UTF-8 JSON array into <paramref name="output"/> (e.g. an ASP.NET Core <c>PipeWriter</c>): one copy from pooled scratch space. </summary>
-    public static void WriteJsonArray<T>( scoped ReadOnlySpan<T> values, IBufferWriter<byte> output, JsonWriterOptions? options = null )
+    /// <summary> Writes a UTF-8 JSON array into <paramref name="output"/> (e.g. an ASP.NET Core <c>PipeWriter</c>): one copy from stack or pooled scratch space. </summary>
+    /// <typeparam name="TWriter"> Any <see cref="IBufferWriter{T}"/>: a class, a struct or a <see langword="ref struct"/>, passed by <see langword="ref"/> so nothing is boxed or copied. </typeparam>
+    public static void WriteJsonArray<T, TWriter>( scoped ReadOnlySpan<T> values, ref TWriter output, JsonWriterOptions? options = null )
         where T : IJsonSerializable<T>
+        where TWriter : IBufferWriter<byte>, allows ref struct
     {
-        ArgumentNullException.ThrowIfNull(output);
         JsonUtf8Writer writer = new(stackalloc byte[STACK_CHARS], options ?? T.DefaultWriterOptions);
 
         try
         {
             JsonSequences.WriteSpan<JsonUtf8Writer, T, JsonModelConverter<T>>(ref writer, values);
-            output.Write(writer.Written);
+            CopyTo(writer.Written, ref output);
         }
         finally { writer.Dispose(); }
     }
 
-    /// <inheritdoc cref="WriteJsonArray{T}(ReadOnlySpan{T}, IBufferWriter{byte}, JsonWriterOptions?)"/>
-    public static void WriteJsonArray<T>( IEnumerable<T> values, IBufferWriter<byte> output, JsonWriterOptions? options = null )
+    /// <inheritdoc cref="WriteJsonArray{T, TWriter}(ReadOnlySpan{T}, ref TWriter, JsonWriterOptions?)"/>
+    public static void WriteJsonArray<T, TWriter>( IEnumerable<T> values, ref TWriter output, JsonWriterOptions? options = null )
         where T : IJsonSerializable<T>
+        where TWriter : IBufferWriter<byte>, allows ref struct
     {
         ArgumentNullException.ThrowIfNull(values);
-        ArgumentNullException.ThrowIfNull(output);
         JsonUtf8Writer writer = new(stackalloc byte[STACK_CHARS], options ?? T.DefaultWriterOptions);
 
         try
         {
             JsonSequences.WriteEnumerable<JsonUtf8Writer, T, JsonModelConverter<T>>(ref writer, values);
-            output.Write(writer.Written);
+            CopyTo(writer.Written, ref output);
         }
         finally { writer.Dispose(); }
     }

@@ -68,17 +68,79 @@ public sealed class CodecTests
         LineItem item = __items[1];
 
         ArrayBufferWriter<byte> bytes = new();
-        item.WriteJson(bytes);
+        item.WriteJson(ref bytes);
         Assert.That(bytes.WrittenSpan.ToArray(), Is.EqualTo(item.ToJsonUtf8()));
 
         ArrayBufferWriter<char> chars = new();
-        JsonCodec.WriteJson(item, chars);
+        JsonCodec.WriteJsonUtf16(item, ref chars);
         Assert.That(chars.WrittenSpan.ToString(), Is.EqualTo(item.ToJson()));
 
         ValueStringBuilder builder = new(64);
         builder.Append("x=");
         JsonCodec.WriteJson(item, ref builder);
         Assert.That(builder.ToString(), Is.EqualTo("x=" + item.ToJson()));
+    }
+
+    /// <summary> Buffer writers are generic and passed by ref: a struct writer's writes land in the caller's instance, a ref struct works, and a writer that hands out small spans gets everything. </summary>
+    [Test] public void BufferWriters_StructRefStructAndChunked()
+    {
+        Invoice invoice  = ModelTests.SampleInvoice();
+        byte[]  expected = invoice.ToJsonUtf8();
+
+        StructWriter structWriter = new(new byte[expected.Length + 16]);
+        JsonCodec.WriteJson(invoice, ref structWriter);
+        Assert.That(structWriter.Written, Is.EqualTo(expected), "struct writer (by ref, not a copy)");
+
+        StructWriter generated = new(new byte[expected.Length + 16]);
+        invoice.WriteJson(ref generated);
+        Assert.That(generated.Written, Is.EqualTo(expected), "generated WriteJson<TWriter>");
+
+        StructWriter chunked = new(new byte[expected.Length + 16], 7);
+        JsonCodec.WriteJson(invoice, ref chunked);
+        Assert.That(chunked.Written, Is.EqualTo(expected), "7-byte spans");
+
+        Span<byte> stack      = stackalloc byte[expected.Length + 16];
+        SpanWriter spanWriter = new(stack);
+        JsonCodec.WriteJson(invoice, ref spanWriter);
+        Assert.That(stack[..spanWriter.Count].ToArray(), Is.EqualTo(expected), "ref struct writer");
+
+        LineItem[]   items = [.. __items];
+        StructWriter array = new(new byte[4096], 5);
+        JsonCodec.WriteJsonArray((ReadOnlySpan<LineItem>)items, ref array);
+        Assert.That(array.Written, Is.EqualTo(JsonCodec.ToJsonArrayUtf8<LineItem>(items)), "WriteJsonArray");
+
+        Assert.That(JsonCodecRegistry.TryGet(typeof(List<LineItem>), out JsonTypeCodec? codec), Is.True);
+        StructWriter erased = new(new byte[4096], 3);
+        codec!.Write(items.ToList(), ref erased);
+        Assert.That(erased.Written, Is.EqualTo(JsonCodec.ToJsonArrayUtf8<LineItem>(items)), "JsonTypeCodec.Write<TWriter>");
+
+        StructWriter none = new(new byte[16]);
+        codec.Write(null, ref none);
+        Assert.That(Encoding.UTF8.GetString(none.Written), Is.EqualTo("null"));
+    }
+
+    /// <summary> A mutable struct writer: by-value passing would lose every write. <paramref name="maxSpan"/> limits each <see cref="GetSpan"/>. </summary>
+    private struct StructWriter( byte[] buffer, int maxSpan = int.MaxValue ) : IBufferWriter<byte>
+    {
+        private int __count;
+
+        public readonly byte[] Written => buffer.AsSpan(0, __count).ToArray();
+
+        public void         Advance( int   count )         => __count += count;
+        public Memory<byte> GetMemory( int sizeHint = 0 ) => buffer.AsMemory(__count, Math.Min(maxSpan, buffer.Length - __count));
+        public Span<byte>   GetSpan( int   sizeHint = 0 ) => buffer.AsSpan(__count, Math.Min(maxSpan, buffer.Length - __count));
+    }
+
+    /// <summary> A writer that can only live on the stack. </summary>
+    private ref struct SpanWriter( Span<byte> buffer ) : IBufferWriter<byte>
+    {
+        private readonly Span<byte> __buffer = buffer;
+
+        public int Count { get; private set; }
+
+        public void         Advance( int   count )         => Count += count;
+        public Memory<byte> GetMemory( int sizeHint = 0 ) => throw new NotSupportedException("a span writer has no Memory");
+        public Span<byte>   GetSpan( int   sizeHint = 0 ) => __buffer[Count..];
     }
 
     [Test] public void Sequences_SingleAndMultiSegment()

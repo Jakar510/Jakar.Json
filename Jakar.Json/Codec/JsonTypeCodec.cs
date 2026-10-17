@@ -55,8 +55,10 @@ public abstract class JsonTypeCodec
     }
 
     /// <summary> Writes <paramref name="value"/> (a <see cref="Type"/>, or <see langword="null"/>) as UTF-8 into <paramref name="output"/>, e.g. an ASP.NET Core <c>PipeWriter</c>. </summary>
+    /// <typeparam name="TWriter"> Any <see cref="IBufferWriter{T}"/>: a class, a struct or a <see langword="ref struct"/>, passed by <see langword="ref"/>. </typeparam>
     /// <exception cref="ArgumentException"> <paramref name="value"/> isn't a <see cref="Type"/>. </exception>
-    public abstract void Write( object? value, IBufferWriter<byte> output, JsonWriterOptions? options = null );
+    public abstract void Write<TWriter>( object? value, ref TWriter output, JsonWriterOptions? options = null )
+        where TWriter : IBufferWriter<byte>, allows ref struct;
 
 
     /// <summary> The codec for a sequence of this type (<see cref="Type"/> is the element type). </summary>
@@ -83,18 +85,16 @@ internal sealed class JsonModelCodec<T>() : JsonTypeCodec(typeof(T))
                                                                                                                  ? null
                                                                                                                  : JsonCodec.FromJson<T>(utf8Json, options);
 
-    public override void Write( object? value, IBufferWriter<byte> output, JsonWriterOptions? options = null )
+    public override void Write<TWriter>( object? value, ref TWriter output, JsonWriterOptions? options = null )
     {
-        ArgumentNullException.ThrowIfNull(output);
-
         switch ( value )
         {
             case null:
-                output.Write("null"u8);
+                JsonCodec.CopyTo("null"u8, ref output);
                 return;
 
             case T model:
-                JsonCodec.WriteJson(in model, output, options);
+                JsonCodec.WriteJson(in model, ref output, options);
                 return;
 
             default: throw NotThisType(value);
@@ -123,26 +123,24 @@ internal sealed class JsonSequenceCodec<T>( Type sequenceType, bool asArray ) : 
                    : JsonCodec.FromJsonList<T>(utf8Json, options);
     }
 
-    public override void Write( object? value, IBufferWriter<byte> output, JsonWriterOptions? options = null )
+    public override void Write<TWriter>( object? value, ref TWriter output, JsonWriterOptions? options = null )
     {
-        ArgumentNullException.ThrowIfNull(output);
-
         switch ( value )
         {
             case null:
-                output.Write("null"u8);
+                JsonCodec.CopyTo("null"u8, ref output);
                 return;
 
             case T[] array:
-                JsonCodec.WriteJsonArray(array.AsSpan(), output, options);
+                JsonCodec.WriteJsonArray((ReadOnlySpan<T>)array, ref output, options);
                 return;
 
             case List<T> list:
-                JsonCodec.WriteJsonArray((ReadOnlySpan<T>)CollectionsMarshal.AsSpan(list), output, options);
+                JsonCodec.WriteJsonArray((ReadOnlySpan<T>)CollectionsMarshal.AsSpan(list), ref output, options);
                 return;
 
             case IEnumerable<T> values:
-                JsonCodec.WriteJsonArray(values, output, options);
+                JsonCodec.WriteJsonArray(values, ref output, options);
                 return;
 
             default: throw NotThisType(value);

@@ -25,6 +25,5 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Jakar.Json.AspNetCore\Jakar.Json.AspNetCore.csproj" />
-		<ProjectReference Include="..\Jakar.Json.Generator\Jakar.Json.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 	</ItemGroup>
 </Project>

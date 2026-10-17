@@ -33,7 +33,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Jakar.Json\Jakar.Json.csproj" />
+		<!-- The released Jakar.Json (bump its version in Directory.Packages.props to use a newer one). PrivateAssets="none" passes its [JsonModel] generator on to this package's consumers and to the projects referencing this one. -->
+		<PackageReference Include="Jakar.Json" PrivateAssets="none" />
 	</ItemGroup>
 
 	<ItemGroup>

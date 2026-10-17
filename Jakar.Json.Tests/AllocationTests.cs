@@ -35,7 +35,7 @@ public sealed class AllocationTests
         long allocated = Measure(() =>
                                  {
                                      output.ResetWrittenCount();
-                                     __invoice.WriteJson(output);
+                                     __invoice.WriteJson(ref output);
                                  });
 
         Assert.That(allocated, Is.Zero);

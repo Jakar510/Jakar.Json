@@ -36,7 +36,7 @@ public sealed class JsonGenerator : IIncrementalGenerator
     internal const string JSON_DERIVED_ATTRIBUTE  = "Jakar.Json.JsonDerivedAttribute";
     internal const string SERIALIZABLE_INTERFACE  = "Jakar.Json.IJsonSerializable`1";
     internal const string CONVERTER_INTERFACE     = "Jakar.Json.IJsonConverter`1";
-    internal const string VERSION                 = "10.1.0";
+    internal const string VERSION                 = "10.2.0";
 
 
     public void Initialize( IncrementalGeneratorInitializationContext context )

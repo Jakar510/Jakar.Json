@@ -16,8 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Jakar.Json.AspNetCore\Jakar.Json.AspNetCore.csproj" />
-    <!-- [JsonModel] code for this app's own types (the Jakar.Json package ships the generator; a project reference has to add it). -->
-    <ProjectReference Include="..\Jakar.Json.Generator\Jakar.Json.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <!-- The [JsonModel] generator comes with the Jakar.Json package, through Jakar.Json.AspNetCore. -->
   </ItemGroup>
 
 </Project>

@@ -301,7 +301,7 @@ All are written as JSON strings.
 | Operation | GC allocations |
 |---|---|
 | `value.TryFormat(Span<char>, …)` / `TryFormat(Span<byte>, …)` | **0** |
-| `JsonCodec.WriteJson(value, IBufferWriter<byte>)` / `IBufferWriter<char>` | **0** (beyond what the buffer writer itself allocates) |
+| `JsonCodec.WriteJson(value, ref TWriter)` (UTF-8) / `WriteJsonUtf16(value, ref TWriter)` | **0** (beyond what the buffer writer itself allocates) |
 | `value.ToJson()` → `string` | **exactly 1**: the result string, at its exact length |
 | `value.ToJsonUtf8()` → `byte[]` | **exactly 1**: the result array |
 | `value.ToJson(Stream)` | **0** (pooled buffer, flushed in 16 KB chunks) |
@@ -569,13 +569,14 @@ string           ToJson( JsonWriterOptions? options = null );
 byte[]           ToJsonUtf8( JsonWriterOptions? options = null );
 bool             TryFormat( Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider );   // ISpanFormattable
 bool             TryFormat( Span<byte> utf8Destination, out int bytesWritten, ReadOnlySpan<char> format, IFormatProvider? provider ); // IUtf8SpanFormattable
-void             WriteJson( IBufferWriter<byte> output, JsonWriterOptions? options = null );
-void             WriteJson( IBufferWriter<char> output, JsonWriterOptions? options = null );
-void             WriteJson( ref ValueStringBuilder builder, JsonWriterOptions? options = null );   // append into a caller builder
+void             WriteJson<TWriter>( ref TWriter output, JsonWriterOptions? options = null )      // UTF-8 into any IBufferWriter<byte>
+                     where TWriter : IBufferWriter<byte>, allows ref struct;
 void             ToJson( Stream stream, JsonWriterOptions? options = null );                       // UTF-8
 ValueTask        ToJsonAsync( Stream stream, JsonWriterOptions? options = null, CancellationToken token = default );
 void             ToJson( TextWriter writer, JsonWriterOptions? options = null );
 ```
+
+Buffer writers are generic and passed by `ref` (since 10.2.0), so a struct writer's writes land in the caller's instance, a `ref struct` writer works, and nothing is boxed. `JsonCodec` also has `WriteJsonUtf16<T, TWriter>(in T, ref TWriter)` for an `IBufferWriter<char>`, `WriteJson<T>(in T, ref ValueStringBuilder)` to append to a caller builder, and `WriteJsonArray<T, TWriter>(ReadOnlySpan<T> | IEnumerable<T>, ref TWriter)`.
 
 `JsonCodec` also writes root-level sequences without wrapper types: `ToJsonArray<T>(ReadOnlySpan<T>)`, `ToJsonArray<T>(IEnumerable<T>)`, `ToJsonArrayUtf8<T>` and `ToJsonArray<T>(ReadOnlySpan<T>, Stream)`. This mirrors `JsonModel.Arrays` for `[JsonModel]` types.
 

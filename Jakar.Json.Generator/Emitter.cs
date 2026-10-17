@@ -1017,7 +1017,7 @@ internal static class Emitter
         Emit("ToJsonUtf8",         $"public {@new}byte[] ToJsonUtf8( {options} ) => {J}JsonCodec.ToJsonUtf8(this, options);");
         Emit("ToJson:stream",      $"public {@new}void ToJson( global::System.IO.Stream stream, {options} ) => {J}JsonCodec.ToJson(this, stream, options);");
         Emit("ToJsonAsync",        $"public {@new}global::System.Threading.Tasks.ValueTask ToJsonAsync( global::System.IO.Stream stream, {options}, global::System.Threading.CancellationToken token = default ) => {J}JsonCodec.ToJsonAsync(this, stream, options, token);");
-        Emit("WriteJson:buffer",   $"public {@new}void WriteJson( global::System.Buffers.IBufferWriter<byte> output, {options} ) => {J}JsonCodec.WriteJson(this, output, options);");
+        Emit("WriteJson:buffer",   $"public {@new}void WriteJson<TWriter>( ref TWriter output, {options} ) where TWriter : global::System.Buffers.IBufferWriter<byte>, allows ref struct => {J}JsonCodec.WriteJson(this, ref output, options);");
         Emit("FromJson:string",    $"public static {@new}{self} FromJson( string json, {read} ) => {J}JsonCodec.FromJson<{self}>(json, options);");
         Emit("FromJson:chars",     $"public static {@new}{self} FromJson( global::System.ReadOnlySpan<char> json, {read} ) => {J}JsonCodec.FromJson<{self}>(json, options);");
         Emit("FromJson:bytes",     $"public static {@new}{self} FromJson( global::System.ReadOnlySpan<byte> utf8Json, {read} ) => {J}JsonCodec.FromJson<{self}>(utf8Json, options);");
