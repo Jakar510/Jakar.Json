@@ -10,7 +10,7 @@ name: Publish
 #
 # nuget.org Trusted Publishing (no stored API key): the repository needs
 #   - a Trusted Publishing policy on nuget.org: owner Jakar510, repository Jakar.Json, workflow file publish.yml;
-#   - the secret NUGET_USER: the nuget.org profile name (not the email address).
+#   - NUGET_USER: the nuget.org profile name (not the email address), as a repository variable or a secret.
 
 on:
   push:
@@ -80,11 +80,22 @@ jobs:
           name: packages
           path: artifacts/**
 
+      # The nuget.org profile name isn't a secret: a repository variable (Settings → Secrets and variables → Actions → Variables) or a secret both work.
+      - name: Check the nuget.org user is configured
+        shell: bash
+        env:
+          NUGET_USER: ${{ vars.NUGET_USER || secrets.NUGET_USER }}
+        run: |
+          if [ -z "$NUGET_USER" ]; then
+            echo "::error title=NUGET_USER is not set::Add a repository variable (or secret) named NUGET_USER holding your nuget.org profile name (not your email), then re-run this workflow."
+            exit 1
+          fi
+
       - name: NuGet login (OIDC → short-lived API key)
         uses: NuGet/login@v1
         id: login
         with:
-          user: ${{ secrets.NUGET_USER }}
+          user: ${{ vars.NUGET_USER || secrets.NUGET_USER }}
 
       # In dependency order; each push also sends the .snupkg next to the .nupkg.
       - name: Push
