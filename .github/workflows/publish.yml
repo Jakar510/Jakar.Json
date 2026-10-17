@@ -9,7 +9,8 @@ name: Publish
 # Jakar.Spans must be on nuget.org first (it's published from its own repository).
 #
 # nuget.org Trusted Publishing (no stored API key): the repository needs
-#   - a Trusted Publishing policy on nuget.org: owner Jakar510, repository Jakar.Json, workflow file publish.yml;
+#   - a Trusted Publishing policy on nuget.org: owner Jakar510, repository Jakar.Json, workflow file publish.yml, environment production
+#     (the publish job runs in the GitHub environment "production", which GitHub creates on first use);
 #   - NUGET_USER: the nuget.org profile name (not the email address), as a repository variable or a secret.
 
 on:
@@ -36,6 +37,8 @@ jobs:
     name: Pack and push to nuget.org
     needs: ci
     runs-on: ubuntu-latest
+    # Must match the environment in the nuget.org Trusted Publishing policy: the OIDC token carries it, and the policy rejects any other.
+    environment: production
     permissions:
       contents: read
       id-token: write # GitHub OIDC token for nuget.org Trusted Publishing
