@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<Version>10.1.0</Version>
+		<Description>Jakar.Json for Quartz.NET job data: store [JsonModel] values in a JobDataMap as Jakar.Json text and read them back - what Quartz' persistent stores require for structured values, with any serializer.</Description>
+		<PackageTags>json quartz scheduler jobs jobdatamap persistent-store source-generator</PackageTags>
+		<PackageReleaseNotes>10.1.0: initial release.</PackageReleaseNotes>
+	</PropertyGroup>
+
+	<Import Project="..\Shared\Integration.props" />
+
+	<ItemGroup>
+		<PackageReference Include="Quartz" />
+	</ItemGroup>
+</Project>

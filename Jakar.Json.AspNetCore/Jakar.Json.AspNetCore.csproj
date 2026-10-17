@@ -6,13 +6,13 @@
 		<ImplicitUsings>disable</ImplicitUsings>
 		<RootNamespace>Jakar.Json.AspNetCore</RootNamespace>
 		<AssemblyName>Jakar.Json.AspNetCore</AssemblyName>
-		<Version>10.1.0</Version>
+		<Version>10.2.0</Version>
 		<Title>Jakar.Json.AspNetCore</Title>
 		<PackageId>Jakar.Json.AspNetCore</PackageId>
 		<Authors>Tyler Stegmaier</Authors>
 		<Description>Jakar.Json as ASP.NET Core's JSON serializer for [JsonModel] types: MVC input/output formatters (AddJakarJson), and for minimal APIs typed results, a request-body wrapper and an endpoint filter. Other types keep using System.Text.Json. Reflection-free.</Description>
 		<PackageTags>json aspnetcore mvc minimal-api formatter source-generator aot zero-allocation utf8</PackageTags>
-		<PackageReleaseNotes>10.1.0: initial release.</PackageReleaseNotes>
+		<PackageReleaseNotes>10.2.0: TempData can hold [JsonModel] values (AddJakarJsonTempData). 10.1.0: initial release.</PackageReleaseNotes>
 		<PackageIcon>icon.png</PackageIcon>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<PackageReadmeFile>README.md</PackageReadmeFile>

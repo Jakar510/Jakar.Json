@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<Version>10.1.0</Version>
+		<Description>Jakar.Json for GraphQL.Client: response data (and variables) of [JsonModel] types are read and written by Jakar.Json through the client's System.Text.Json serializer, over HTTP and WebSockets.</Description>
+		<PackageTags>json graphql graphql-client http websockets serializer source-generator</PackageTags>
+		<PackageReleaseNotes>10.1.0: initial release.</PackageReleaseNotes>
+		<IsAotCompatible>false</IsAotCompatible>
+	</PropertyGroup>
+
+	<Import Project="..\Shared\Integration.props" />
+
+	<ItemGroup>
+		<PackageReference Include="GraphQL.Client.Serializer.SystemTextJson" />
+		<ProjectReference Include="..\Jakar.Json.SystemTextJson\Jakar.Json.SystemTextJson.csproj" />
+	</ItemGroup>
+</Project>

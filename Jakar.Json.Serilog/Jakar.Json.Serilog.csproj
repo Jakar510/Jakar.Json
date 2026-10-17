@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<Version>10.1.0</Version>
+		<Description>Jakar.Json for Serilog: [JsonModel] values logged with {@Value} are destructured with the names and shape Jakar.Json writes them in, instead of by reflection.</Description>
+		<PackageTags>json serilog logging structured-logging destructuring source-generator</PackageTags>
+		<PackageReleaseNotes>10.1.0: initial release.</PackageReleaseNotes>
+	</PropertyGroup>
+
+	<Import Project="..\Shared\Integration.props" />
+
+	<ItemGroup>
+		<PackageReference Include="Serilog" />
+	</ItemGroup>
+</Project>

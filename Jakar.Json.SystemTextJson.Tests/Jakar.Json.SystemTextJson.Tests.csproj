@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\Shared\Tests.props" />
+
+	<ItemGroup>
+		<!-- Hosts configured through JsonSerializerOptions, exercised end to end -->
+		<PackageReference Include="Microsoft.Extensions.AI.Abstractions" />
+	</ItemGroup>
+</Project>

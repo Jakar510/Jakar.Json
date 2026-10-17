@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<Version>10.1.0</Version>
+		<Description>Jakar.Json for Orleans: grain call arguments, results and state of [JsonModel] types are serialized by Jakar.Json inside Orleans' serializer (its System.Text.Json codec, for exactly the types Jakar.Json supports).</Description>
+		<PackageTags>json orleans actors grains virtual-actors serializer source-generator</PackageTags>
+		<PackageReleaseNotes>10.1.0: initial release.</PackageReleaseNotes>
+		<IsAotCompatible>false</IsAotCompatible>
+	</PropertyGroup>
+
+	<Import Project="..\Shared\Integration.props" />
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Orleans.Serialization.SystemTextJson" />
+		<ProjectReference Include="..\Jakar.Json.SystemTextJson\Jakar.Json.SystemTextJson.csproj" />
+	</ItemGroup>
+</Project>

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<Version>10.1.0</Version>
+		<Description>Jakar.Json as an AWS Lambda serializer: [JsonModel] requests and responses are read and written by Jakar.Json (reflection-free, Native AOT friendly); other types (AWS event types) go to a fallback serializer.</Description>
+		<PackageTags>json aws lambda serverless serializer source-generator aot zero-allocation utf8</PackageTags>
+		<PackageReleaseNotes>10.1.0: initial release.</PackageReleaseNotes>
+	</PropertyGroup>
+
+	<Import Project="..\Shared\Integration.props" />
+
+	<ItemGroup>
+		<PackageReference Include="Amazon.Lambda.Core" />
+		<PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" />
+	</ItemGroup>
+</Project>

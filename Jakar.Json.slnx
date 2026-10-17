@@ -2,18 +2,121 @@
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
     <File Path="Directory.Packages.props" />
+    <File Path="INTEGRATIONS.md" />
     <File Path="LICENSE.txt" />
     <File Path="nuget.config" />
     <File Path="README.md" />
+    <File Path=".github/workflows/ci.yml" />
+    <File Path=".github/workflows/publish.yml" />
   </Folder>
-  <Project Path="AotCompatibility.TestApp/AotCompatibility.TestApp.csproj" />
-  <Project Path="Jakar.Json/Jakar.Json.csproj" />
-  <Project Path="Jakar.Json.AspNetCore/Jakar.Json.AspNetCore.csproj" />
-  <Project Path="Jakar.Json.AspNetCore.Tests/Jakar.Json.AspNetCore.Tests.csproj" />
-  <Project Path="Jakar.Json.Benchmarks/Jakar.Json.Benchmarks.csproj" />
-  <Project Path="Jakar.Json.Generator/Jakar.Json.Generator.csproj" />
-  <Project Path="Jakar.Json.Generator.CodeFixes/Jakar.Json.Generator.CodeFixes.csproj" />
-  <Project Path="Jakar.Json.Generator.Tests/Jakar.Json.Generator.Tests.csproj" />
-  <Project Path="Jakar.Json.Tests/Jakar.Json.Tests.csproj" />
-  <Project Path="Jakar.Json.Tests.WebApi/Jakar.Json.Tests.WebApi.csproj" />
+  <Folder Name="/Shared/">
+    <File Path="Shared/GlobalUsings.cs" />
+    <File Path="Shared/Integration.props" />
+    <File Path="Shared/JsonModels.cs" />
+    <File Path="Shared/PooledBufferWriter.cs" />
+    <File Path="Shared/TestHosting/LoopbackServer.cs" />
+    <File Path="Shared/TestModels/Models.cs" />
+    <File Path="Shared/TestModels/Segments.cs" />
+    <File Path="Shared/Tests.props" />
+  </Folder>
+  <Folder Name="/Core/">
+    <Project Path="Jakar.Json/Jakar.Json.csproj" />
+    <Project Path="Jakar.Json.Tests/Jakar.Json.Tests.csproj" />
+    <Project Path="Jakar.Json.Generator/Jakar.Json.Generator.csproj" />
+    <Project Path="Jakar.Json.Generator.Tests/Jakar.Json.Generator.Tests.csproj" />
+    <Project Path="Jakar.Json.Generator.CodeFixes/Jakar.Json.Generator.CodeFixes.csproj" />
+    <Project Path="Jakar.Json.Benchmarks/Jakar.Json.Benchmarks.csproj" />
+    <Project Path="AotCompatibility.TestApp/AotCompatibility.TestApp.csproj" />
+  </Folder>
+  <Folder Name="/System.Text.Json/">
+    <Project Path="Jakar.Json.SystemTextJson/Jakar.Json.SystemTextJson.csproj" />
+    <Project Path="Jakar.Json.SystemTextJson.Tests/Jakar.Json.SystemTextJson.Tests.csproj" />
+  </Folder>
+  <Folder Name="/AspNetCore/">
+    <Project Path="Jakar.Json.AspNetCore/Jakar.Json.AspNetCore.csproj" />
+    <Project Path="Jakar.Json.AspNetCore.Tests/Jakar.Json.AspNetCore.Tests.csproj" />
+    <Project Path="Jakar.Json.OpenApi/Jakar.Json.OpenApi.csproj" />
+    <Project Path="Jakar.Json.OpenApi.Tests/Jakar.Json.OpenApi.Tests.csproj" />
+    <Project Path="Jakar.Json.SignalR/Jakar.Json.SignalR.csproj" />
+    <Project Path="Jakar.Json.SignalR.Tests/Jakar.Json.SignalR.Tests.csproj" />
+    <Project Path="Jakar.Json.Tests.WebApi/Jakar.Json.Tests.WebApi.csproj" />
+  </Folder>
+  <Folder Name="/Http/">
+    <Project Path="Jakar.Json.Http/Jakar.Json.Http.csproj" />
+    <Project Path="Jakar.Json.Http.Tests/Jakar.Json.Http.Tests.csproj" />
+    <Project Path="Jakar.Json.Refit/Jakar.Json.Refit.csproj" />
+    <Project Path="Jakar.Json.Refit.Tests/Jakar.Json.Refit.Tests.csproj" />
+    <Project Path="Jakar.Json.RestSharp/Jakar.Json.RestSharp.csproj" />
+    <Project Path="Jakar.Json.RestSharp.Tests/Jakar.Json.RestSharp.Tests.csproj" />
+    <Project Path="Jakar.Json.Flurl/Jakar.Json.Flurl.csproj" />
+    <Project Path="Jakar.Json.Flurl.Tests/Jakar.Json.Flurl.Tests.csproj" />
+    <Project Path="Jakar.Json.GraphQLClient/Jakar.Json.GraphQLClient.csproj" />
+    <Project Path="Jakar.Json.GraphQLClient.Tests/Jakar.Json.GraphQLClient.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Caching/">
+    <Project Path="Jakar.Json.Caching/Jakar.Json.Caching.csproj" />
+    <Project Path="Jakar.Json.Caching.Tests/Jakar.Json.Caching.Tests.csproj" />
+    <Project Path="Jakar.Json.FusionCache/Jakar.Json.FusionCache.csproj" />
+    <Project Path="Jakar.Json.FusionCache.Tests/Jakar.Json.FusionCache.Tests.csproj" />
+    <Project Path="Jakar.Json.StackExchangeRedis/Jakar.Json.StackExchangeRedis.csproj" />
+    <Project Path="Jakar.Json.StackExchangeRedis.Tests/Jakar.Json.StackExchangeRedis.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Database/">
+    <Project Path="Jakar.Json.EntityFrameworkCore/Jakar.Json.EntityFrameworkCore.csproj" />
+    <Project Path="Jakar.Json.EntityFrameworkCore.Tests/Jakar.Json.EntityFrameworkCore.Tests.csproj" />
+    <Project Path="Jakar.Json.Dapper/Jakar.Json.Dapper.csproj" />
+    <Project Path="Jakar.Json.Dapper.Tests/Jakar.Json.Dapper.Tests.csproj" />
+    <Project Path="Jakar.Json.Marten/Jakar.Json.Marten.csproj" />
+    <Project Path="Jakar.Json.Marten.Tests/Jakar.Json.Marten.Tests.csproj" />
+    <Project Path="Jakar.Json.Cosmos/Jakar.Json.Cosmos.csproj" />
+    <Project Path="Jakar.Json.Cosmos.Tests/Jakar.Json.Cosmos.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Search/">
+    <Project Path="Jakar.Json.Elasticsearch/Jakar.Json.Elasticsearch.csproj" />
+    <Project Path="Jakar.Json.Elasticsearch.Tests/Jakar.Json.Elasticsearch.Tests.csproj" />
+    <Project Path="Jakar.Json.OpenSearch/Jakar.Json.OpenSearch.csproj" />
+    <Project Path="Jakar.Json.OpenSearch.Tests/Jakar.Json.OpenSearch.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Messaging/">
+    <Project Path="Jakar.Json.Kafka/Jakar.Json.Kafka.csproj" />
+    <Project Path="Jakar.Json.Kafka.Tests/Jakar.Json.Kafka.Tests.csproj" />
+    <Project Path="Jakar.Json.MassTransit/Jakar.Json.MassTransit.csproj" />
+    <Project Path="Jakar.Json.MassTransit.Tests/Jakar.Json.MassTransit.Tests.csproj" />
+    <Project Path="Jakar.Json.NServiceBus/Jakar.Json.NServiceBus.csproj" />
+    <Project Path="Jakar.Json.NServiceBus.Tests/Jakar.Json.NServiceBus.Tests.csproj" />
+    <Project Path="Jakar.Json.Wolverine/Jakar.Json.Wolverine.csproj" />
+    <Project Path="Jakar.Json.Wolverine.Tests/Jakar.Json.Wolverine.Tests.csproj" />
+    <Project Path="Jakar.Json.Rebus/Jakar.Json.Rebus.csproj" />
+    <Project Path="Jakar.Json.Rebus.Tests/Jakar.Json.Rebus.Tests.csproj" />
+    <Project Path="Jakar.Json.EasyNetQ/Jakar.Json.EasyNetQ.csproj" />
+    <Project Path="Jakar.Json.EasyNetQ.Tests/Jakar.Json.EasyNetQ.Tests.csproj" />
+    <Project Path="Jakar.Json.Cap/Jakar.Json.Cap.csproj" />
+    <Project Path="Jakar.Json.Cap.Tests/Jakar.Json.Cap.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Cloud/">
+    <Project Path="Jakar.Json.AzureCore/Jakar.Json.AzureCore.csproj" />
+    <Project Path="Jakar.Json.AzureCore.Tests/Jakar.Json.AzureCore.Tests.csproj" />
+    <Project Path="Jakar.Json.AwsLambda/Jakar.Json.AwsLambda.csproj" />
+    <Project Path="Jakar.Json.AwsLambda.Tests/Jakar.Json.AwsLambda.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Workflows/">
+    <Project Path="Jakar.Json.Temporal/Jakar.Json.Temporal.csproj" />
+    <Project Path="Jakar.Json.Temporal.Tests/Jakar.Json.Temporal.Tests.csproj" />
+    <Project Path="Jakar.Json.DurableTask/Jakar.Json.DurableTask.csproj" />
+    <Project Path="Jakar.Json.DurableTask.Tests/Jakar.Json.DurableTask.Tests.csproj" />
+    <Project Path="Jakar.Json.Quartz/Jakar.Json.Quartz.csproj" />
+    <Project Path="Jakar.Json.Quartz.Tests/Jakar.Json.Quartz.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Actors/">
+    <Project Path="Jakar.Json.Orleans/Jakar.Json.Orleans.csproj" />
+    <Project Path="Jakar.Json.Orleans.Tests/Jakar.Json.Orleans.Tests.csproj" />
+    <Project Path="Jakar.Json.Akka/Jakar.Json.Akka.csproj" />
+    <Project Path="Jakar.Json.Akka.Tests/Jakar.Json.Akka.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Logging/">
+    <Project Path="Jakar.Json.Serilog/Jakar.Json.Serilog.csproj" />
+    <Project Path="Jakar.Json.Serilog.Tests/Jakar.Json.Serilog.Tests.csproj" />
+    <Project Path="Jakar.Json.Logging/Jakar.Json.Logging.csproj" />
+    <Project Path="Jakar.Json.Logging.Tests/Jakar.Json.Logging.Tests.csproj" />
+  </Folder>
 </Solution>

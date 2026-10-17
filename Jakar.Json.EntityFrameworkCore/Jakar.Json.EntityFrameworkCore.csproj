@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<Version>10.1.0</Version>
+		<Description>Jakar.Json for EF Core JSON columns: a value converter and value comparer that store [JsonModel] properties (and collections of them) as Jakar.Json text, for any provider (PostgreSQL jsonb, SQL Server, SQLite, ...).</Description>
+		<PackageTags>json efcore entityframeworkcore orm jsonb value-converter source-generator</PackageTags>
+		<PackageReleaseNotes>10.1.0: initial release.</PackageReleaseNotes>
+	</PropertyGroup>
+
+	<Import Project="..\Shared\Integration.props" />
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.EntityFrameworkCore" />
+	</ItemGroup>
+</Project>

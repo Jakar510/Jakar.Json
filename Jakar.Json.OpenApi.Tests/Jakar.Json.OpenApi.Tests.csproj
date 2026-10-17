@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\Shared\Tests.props" />
+
+	<PropertyGroup>
+		<!-- Microsoft.AspNetCore.OpenApi's source generator intercepts AddOpenApi (the Web SDK enables this by default). -->
+		<InterceptorsNamespaces>$(InterceptorsNamespaces);Microsoft.AspNetCore.OpenApi.Generated</InterceptorsNamespaces>
+		<!-- What the package's buildTransitive targets do for package consumers (a project reference doesn't import them). -->
+		<DefineConstants>$(DefineConstants);JAKAR_JSON_KEEP_ATTRIBUTES</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+		<PackageReference Include="Swashbuckle.AspNetCore.Swagger" />
+		<Compile Include="..\Shared\TestHosting\*.cs" LinkBase="TestHosting" />
+	</ItemGroup>
+</Project>

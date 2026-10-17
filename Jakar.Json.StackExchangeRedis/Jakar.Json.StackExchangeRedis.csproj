@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<Version>10.1.0</Version>
+		<Description>Jakar.Json for StackExchange.Redis: store and read [JsonModel] values in Redis strings and hashes as Jakar.Json UTF-8, written from pooled buffers and read from pooled leases.</Description>
+		<PackageTags>json redis stackexchange.redis cache source-generator aot zero-allocation utf8</PackageTags>
+		<PackageReleaseNotes>10.1.0: initial release.</PackageReleaseNotes>
+	</PropertyGroup>
+
+	<Import Project="..\Shared\Integration.props" />
+
+	<ItemGroup>
+		<PackageReference Include="StackExchange.Redis" />
+	</ItemGroup>
+</Project>

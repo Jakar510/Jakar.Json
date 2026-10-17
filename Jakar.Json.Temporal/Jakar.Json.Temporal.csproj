@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<Version>10.1.0</Version>
+		<Description>Jakar.Json for Temporal (.NET SDK): workflow and activity arguments and results of [JsonModel] types are written and read by Jakar.Json as json/plain payloads; other values keep Temporal's converters.</Description>
+		<PackageTags>json temporal workflow durable-execution payload-converter source-generator</PackageTags>
+		<PackageReleaseNotes>10.1.0: initial release.</PackageReleaseNotes>
+		<IsAotCompatible>false</IsAotCompatible>
+	</PropertyGroup>
+
+	<Import Project="..\Shared\Integration.props" />
+
+	<ItemGroup>
+		<PackageReference Include="Temporalio" />
+	</ItemGroup>
+</Project>

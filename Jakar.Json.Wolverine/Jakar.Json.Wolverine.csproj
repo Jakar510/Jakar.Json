@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<Version>10.1.0</Version>
+		<Description>Jakar.Json as Wolverine's message serializer: messages of [JsonModel] types are written and read by Jakar.Json, straight from the envelope body; other types go to Wolverine's System.Text.Json serializer.</Description>
+		<PackageTags>json wolverine messaging mediator serializer source-generator</PackageTags>
+		<PackageReleaseNotes>10.1.0: initial release.</PackageReleaseNotes>
+		<IsAotCompatible>false</IsAotCompatible>
+	</PropertyGroup>
+
+	<Import Project="..\Shared\Integration.props" />
+
+	<ItemGroup>
+		<PackageReference Include="WolverineFx" />
+	</ItemGroup>
+</Project>

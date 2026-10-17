@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<Version>10.1.0</Version>
+		<Description>A JSON console formatter for Microsoft.Extensions.Logging that writes [JsonModel] values in log state and scopes as structured JSON (by Jakar.Json) instead of ToString().</Description>
+		<PackageTags>json logging console formatter structured-logging microsoft.extensions.logging source-generator</PackageTags>
+		<PackageReleaseNotes>10.1.0: initial release.</PackageReleaseNotes>
+	</PropertyGroup>
+
+	<Import Project="..\Shared\Integration.props" />
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Logging.Console" />
+	</ItemGroup>
+</Project>

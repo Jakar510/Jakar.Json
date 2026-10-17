@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<RootNamespace>Jakar.Json.FusionCache</RootNamespace>
+		<AssemblyName>Jakar.Json.FusionCache</AssemblyName>
+		<Version>10.1.0</Version>
+		<Title>Jakar.Json.FusionCache</Title>
+		<PackageId>Jakar.Json.FusionCache</PackageId>
+		<Authors>Tyler Stegmaier</Authors>
+		<Description>Jakar.Json as FusionCache's distributed-cache serializer: [JsonModel] values (and collections of them) are written by Jakar.Json, common scalars in binary, inside a compact binary entry envelope. Other types can go to a fallback serializer. Reflection-free under Native AOT.</Description>
+		<PackageTags>json fusioncache cache distributed-cache serializer source-generator aot zero-allocation utf8</PackageTags>
+		<PackageReleaseNotes>10.1.0: initial release.</PackageReleaseNotes>
+		<PackageIcon>icon.png</PackageIcon>
+		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/Jakar510/Jakar.Json</RepositoryUrl>
+		<PackageProjectUrl>https://github.com/Jakar510/Jakar.Json</PackageProjectUrl>
+		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<NoWarn>$(NoWarn);1591</NoWarn>
+		<WarningsAsErrors>Nullable;IL2026;IL2046;IL2057;IL2060;IL2067;IL2070;IL2072;IL2075;IL2087;IL2091;IL2111;IL3050;IL3051</WarningsAsErrors>
+		<IsAotCompatible>true</IsAotCompatible>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- The released Jakar.Json (bump its version in Directory.Packages.props to use a newer one). PrivateAssets="none" passes its [JsonModel] generator on to this package's consumers and to the projects referencing this one. -->
+		<PackageReference Include="Jakar.Json" PrivateAssets="none" />
+		<PackageReference Include="ZiggyCreatures.FusionCache" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="Jakar.Json.FusionCache.Tests" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\images\icon.png" Pack="true" PackagePath="\" Visible="false" />
+		<None Include="..\LICENSE.txt" Pack="true" PackagePath="\" Visible="false" />
+		<None Include="README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
+</Project>

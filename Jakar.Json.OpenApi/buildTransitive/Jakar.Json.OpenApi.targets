@@ -1,0 +1,9 @@
+<Project>
+	<!--
+		Jakar.Json's attributes ([JsonModel], [JsonMember], [JsonDefaults]) are [Conditional("JAKAR_JSON_KEEP_ATTRIBUTES")]: compiled away unless the symbol is defined.
+		OpenAPI schemas read them at run time, so every project referencing Jakar.Json.OpenApi keeps them. Models declared in another assembly need the same symbol there.
+	-->
+	<PropertyGroup>
+		<DefineConstants>$(DefineConstants);JAKAR_JSON_KEEP_ATTRIBUTES</DefineConstants>
+	</PropertyGroup>
+</Project>

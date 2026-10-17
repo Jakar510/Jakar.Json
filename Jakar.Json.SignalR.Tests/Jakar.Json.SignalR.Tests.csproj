@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\Shared\Tests.props" />
+
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
+		<Compile Include="..\Shared\TestHosting\*.cs" LinkBase="TestHosting" />
+	</ItemGroup>
+</Project>

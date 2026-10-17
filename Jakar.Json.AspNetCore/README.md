@@ -46,6 +46,25 @@ api.MapGet("/orders", () => JakarResults.JsonArray(store.All()));
 - **`JakarResults`** provides `Json`, `Ok`, `Created` and `JsonArray`. Like `TypedResults`, they describe themselves to OpenAPI.
 - **HTTP helpers:** `request.ReadFromJakarJsonAsync<T>()` and `response.WriteAsJakarJsonAsync(value)`.
 
+## TempData
+
+MVC's default TempData serializer only accepts simple types. `AddJakarJsonTempData()` lets TempData hold `[JsonModel]` values, and arrays, lists and collection interfaces of them:
+
+```csharp
+builder.Services.AddControllersWithViews().AddJakarJsonTempData();
+
+TempData["order"] = order;              // in one request
+var order = TempData["order"] as Order; // in the next
+```
+
+- **Stored form:** a model is stored as Jakar.Json text recording its type, and read back as that type.
+- **Other values** are left to the serializer MVC registered, which this decorates. Call it after `AddControllersWithViews()` or `AddRazorPages()`.
+- **Safety:** TempData is data-protected (cookies) or kept on the server (session), so stored type names can't be tampered with. Only types `JsonCodecRegistry` resolves are read.
+
+## SignalR
+
+For SignalR's JSON hub protocol, see [Jakar.Json.SignalR](https://github.com/Jakar510/Jakar.Json/blob/master/Jakar.Json.SignalR/README.md).
+
 ## Options
 
 ```csharp

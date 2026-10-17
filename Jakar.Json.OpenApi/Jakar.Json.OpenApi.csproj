@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<Version>10.1.0</Version>
+		<Description>OpenAPI schemas that match Jakar.Json: [JsonModel] types are described with the property names Jakar.Json writes ([JsonModel] naming, [JsonMember], System.Text.Json attributes), for Microsoft.AspNetCore.OpenApi (schema transformer) and Swashbuckle (data contract resolver).</Description>
+		<PackageTags>json openapi swagger swashbuckle aspnetcore schema source-generator</PackageTags>
+		<PackageReleaseNotes>10.1.0: initial release.</PackageReleaseNotes>
+		<!-- Schema generation inspects types with reflection (as both OpenAPI generators do). -->
+		<IsAotCompatible>false</IsAotCompatible>
+	</PropertyGroup>
+
+	<Import Project="..\Shared\Integration.props" />
+
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+		<PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="buildTransitive\Jakar.Json.OpenApi.targets" Pack="true" PackagePath="buildTransitive\" />
+	</ItemGroup>
+</Project>

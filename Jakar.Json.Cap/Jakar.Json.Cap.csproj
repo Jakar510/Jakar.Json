@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<Version>10.1.0</Version>
+		<Description>Jakar.Json for CAP (DotNetCore.CAP): message payloads of [JsonModel] types are written and read by Jakar.Json through CAP's System.Text.Json serializer.</Description>
+		<PackageTags>json cap dotnetcore.cap outbox messaging eventbus serializer source-generator</PackageTags>
+		<PackageReleaseNotes>10.1.0: initial release.</PackageReleaseNotes>
+		<IsAotCompatible>false</IsAotCompatible>
+	</PropertyGroup>
+
+	<Import Project="..\Shared\Integration.props" />
+
+	<ItemGroup>
+		<PackageReference Include="DotNetCore.CAP" />
+		<ProjectReference Include="..\Jakar.Json.SystemTextJson\Jakar.Json.SystemTextJson.csproj" />
+	</ItemGroup>
+</Project>

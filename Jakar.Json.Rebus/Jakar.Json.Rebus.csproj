@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<Version>10.1.0</Version>
+		<Description>Jakar.Json for Rebus: message bodies of [JsonModel] types are written and read by Jakar.Json inside Rebus' System.Text.Json serializer (configured with Jakar.Json.SystemTextJson).</Description>
+		<PackageTags>json rebus messaging bus serializer source-generator</PackageTags>
+		<PackageReleaseNotes>10.1.0: initial release.</PackageReleaseNotes>
+	</PropertyGroup>
+
+	<Import Project="..\Shared\Integration.props" />
+
+	<ItemGroup>
+		<PackageReference Include="Rebus" />
+		<ProjectReference Include="..\Jakar.Json.SystemTextJson\Jakar.Json.SystemTextJson.csproj" />
+	</ItemGroup>
+</Project>

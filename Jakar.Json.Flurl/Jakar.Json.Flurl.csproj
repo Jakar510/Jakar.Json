@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<Version>10.1.0</Version>
+		<Description>Jakar.Json as Flurl.Http's JSON serializer: request and response bodies of [JsonModel] types are written and read by Jakar.Json (responses from the stream); other types go to Flurl's System.Text.Json serializer.</Description>
+		<PackageTags>json flurl http rest client serializer source-generator</PackageTags>
+		<PackageReleaseNotes>10.1.0: initial release.</PackageReleaseNotes>
+	</PropertyGroup>
+
+	<Import Project="..\Shared\Integration.props" />
+
+	<ItemGroup>
+		<PackageReference Include="Flurl.Http" />
+	</ItemGroup>
+</Project>

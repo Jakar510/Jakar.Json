@@ -1,0 +1,30 @@
+<Project>
+	<!-- Shared by the integration test projects (Jakar.Json.<Host>.Tests): NUnit, and a reference to the package under test (the project name without ".Tests"). -->
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<IsPackable>false</IsPackable>
+		<RootNamespace>$(MSBuildProjectName)</RootNamespace>
+		<WarningsAsErrors>Nullable</WarningsAsErrors>
+		<PackageUnderTest>$(MSBuildProjectName.Substring(0, $(MSBuildProjectName.LastIndexOf('.Tests'))))</PackageUnderTest>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" />
+		<PackageReference Include="NUnit" />
+		<PackageReference Include="NUnit3TestAdapter" />
+		<PackageReference Include="NUnit.Analyzers">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="$(MSBuildThisFileDirectory)..\$(PackageUnderTest)\$(PackageUnderTest).csproj" />
+		<Compile Include="$(MSBuildThisFileDirectory)TestModels\*.cs" LinkBase="TestModels" />
+		<Using Include="NUnit.Framework" />
+		<Using Include="Jakar.Json.Tests.Shared" />
+	</ItemGroup>
+</Project>

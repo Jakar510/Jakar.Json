@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\Shared\Tests.props" />
+
+	<ItemGroup>
+		<PackageReference Include="Quartz.Serialization.SystemTextJson" />
+	</ItemGroup>
+</Project>

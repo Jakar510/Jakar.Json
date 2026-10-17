@@ -1,0 +1,47 @@
+<Project>
+	<!--
+		Shared by the integration packages (Jakar.Json.<Host>). A package's csproj sets Version, Description, PackageTags and PackageReleaseNotes, imports this file,
+		and adds its host's PackageReference. IsAotCompatible defaults to true; a package whose host library isn't trimming-safe sets it to false before the import.
+	-->
+	<PropertyGroup>
+		<TargetFramework Condition="'$(TargetFramework)' == ''">net10.0</TargetFramework>
+		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<RootNamespace>$(MSBuildProjectName)</RootNamespace>
+		<AssemblyName>$(MSBuildProjectName)</AssemblyName>
+		<Title>$(MSBuildProjectName)</Title>
+		<PackageId>$(MSBuildProjectName)</PackageId>
+		<Authors>Tyler Stegmaier</Authors>
+		<PackageIcon>icon.png</PackageIcon>
+		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/Jakar510/Jakar.Json</RepositoryUrl>
+		<PackageProjectUrl>https://github.com/Jakar510/Jakar.Json</PackageProjectUrl>
+		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<NoWarn>$(NoWarn);1591</NoWarn>
+		<IsAotCompatible Condition="'$(IsAotCompatible)' == ''">true</IsAotCompatible>
+		<WarningsAsErrors Condition="'$(IsAotCompatible)' == 'true'">Nullable;IL2026;IL2046;IL2057;IL2060;IL2067;IL2070;IL2072;IL2075;IL2087;IL2091;IL2111;IL3050;IL3051</WarningsAsErrors>
+		<WarningsAsErrors Condition="'$(IsAotCompatible)' != 'true'">Nullable</WarningsAsErrors>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- The released Jakar.Json (bump its version in Directory.Packages.props to use a newer one). PrivateAssets="none" passes its [JsonModel] generator on to this package's consumers. -->
+		<PackageReference Include="Jakar.Json" PrivateAssets="none" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Include="$(MSBuildThisFileDirectory)*.cs" LinkBase="Shared" />
+		<InternalsVisibleTo Include="$(MSBuildProjectName).Tests" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="$(MSBuildThisFileDirectory)..\images\icon.png" Pack="true" PackagePath="\" Visible="false" />
+		<None Include="$(MSBuildThisFileDirectory)..\LICENSE.txt" Pack="true" PackagePath="\" Visible="false" />
+		<None Include="README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
+</Project>

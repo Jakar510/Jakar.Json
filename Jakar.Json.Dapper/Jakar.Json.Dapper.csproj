@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<Version>10.1.0</Version>
+		<Description>Jakar.Json for Dapper: type handlers that write [JsonModel] parameters (and collections of them) as Jakar.Json text and read JSON columns back into models, for any ADO.NET provider.</Description>
+		<PackageTags>json dapper orm sql jsonb type-handler source-generator</PackageTags>
+		<PackageReleaseNotes>10.1.0: initial release.</PackageReleaseNotes>
+	</PropertyGroup>
+
+	<Import Project="..\Shared\Integration.props" />
+
+	<ItemGroup>
+		<PackageReference Include="Dapper" />
+	</ItemGroup>
+</Project>

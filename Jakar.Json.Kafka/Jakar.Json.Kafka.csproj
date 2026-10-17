@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<Version>10.1.0</Version>
+		<Description>Jakar.Json for Confluent.Kafka: serializers and deserializers (sync and async) for [JsonModel] keys and values, and producer/consumer builder extensions.</Description>
+		<PackageTags>json kafka confluent messaging serializer deserializer source-generator aot zero-allocation utf8</PackageTags>
+		<PackageReleaseNotes>10.1.0: initial release.</PackageReleaseNotes>
+	</PropertyGroup>
+
+	<Import Project="..\Shared\Integration.props" />
+
+	<ItemGroup>
+		<PackageReference Include="Confluent.Kafka" />
+	</ItemGroup>
+</Project>

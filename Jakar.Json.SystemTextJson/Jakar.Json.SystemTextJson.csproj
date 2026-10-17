@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<Version>10.1.0</Version>
+		<Description>Jakar.Json inside System.Text.Json: a JsonConverterFactory that reads and writes [JsonModel] types (and collections of them) with Jakar.Json wherever System.Text.Json is configured - SignalR, Blazor, HttpClient, Npgsql, Dapr, Azure SDKs, Microsoft.Extensions.AI and more.</Description>
+		<PackageTags>json system.text.json converter source-generator aot zero-allocation utf8</PackageTags>
+		<PackageReleaseNotes>10.1.0: initial release.</PackageReleaseNotes>
+	</PropertyGroup>
+
+	<Import Project="..\Shared\Integration.props" />
+</Project>
