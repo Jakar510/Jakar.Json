@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<Version>10.1.0</Version>
+		<Version>10.2.0</Version>
 		<Description>Jakar.Json as the Durable Task (Durable Functions / Durable Task Scheduler) data converter: orchestration and activity inputs and outputs of [JsonModel] types are written and read by Jakar.Json; other types go to a fallback.</Description>
 		<PackageTags>json durabletask durable-functions orchestration data-converter source-generator</PackageTags>
-		<PackageReleaseNotes>10.1.0: initial release.</PackageReleaseNotes>
+		<PackageReleaseNotes>10.2.0: built against Jakar.Json 10.2.0, whose writers take a ref TWriter; 10.1.0 calls the removed IBufferWriter overloads and throws MissingMethodException with Jakar.Json 10.2.0. 10.1.0: initial release.</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<Import Project="..\Shared\Integration.props" />

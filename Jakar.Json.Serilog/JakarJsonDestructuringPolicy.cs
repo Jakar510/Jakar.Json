@@ -23,8 +23,7 @@ public sealed class JakarJsonDestructuringPolicy : IDestructuringPolicy
         result = null;
         if ( value is null || !JsonCodecRegistry.TryGet(value.GetType(), out JsonTypeCodec? codec) ) { return false; }
 
-        using PooledBufferWriter buffer = new();
-        codec.Write(value, buffer);
+        using PooledBufferWriter buffer = codec.WriteToBuffer(value);
 
         using JsonDocument document = JsonDocument.Parse(buffer.WrittenMemory);
         result = Convert(document.RootElement, value.GetType().Name);

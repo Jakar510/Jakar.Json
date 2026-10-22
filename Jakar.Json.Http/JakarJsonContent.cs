@@ -47,15 +47,13 @@ public sealed class JakarJsonContent : HttpContent
 
     protected override async Task SerializeToStreamAsync( Stream stream, TransportContext? context, CancellationToken cancellationToken )
     {
-        using PooledBufferWriter buffer = new();
-        __codec.Write(Value, buffer);
+        using PooledBufferWriter buffer = __codec.WriteToBuffer(Value);
         await stream.WriteAsync(buffer.WrittenMemory, cancellationToken).ConfigureAwait(false);
     }
 
     protected override void SerializeToStream( Stream stream, TransportContext? context, CancellationToken cancellationToken )
     {
-        using PooledBufferWriter buffer = new();
-        __codec.Write(Value, buffer);
+        using PooledBufferWriter buffer = __codec.WriteToBuffer(Value);
         stream.Write(buffer.WrittenSpan);
     }
 

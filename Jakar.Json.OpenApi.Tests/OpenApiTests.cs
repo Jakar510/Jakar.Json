@@ -71,7 +71,7 @@ public sealed class JsonModelContractTests
         Type                 type  = sample.GetType();
         ArrayBufferWriter<byte> buffer = new();
         Assert.That(JsonCodecRegistry.TryGet(type, out JsonTypeCodec? codec), Is.True, type.Name);
-        codec!.Write(sample, buffer);
+        codec!.Write(sample, ref buffer);
 
         using JsonDocument document = JsonDocument.Parse(buffer.WrittenMemory);
         string[]           written  = document.RootElement.EnumerateObject().Select(static p => p.Name).ToArray();

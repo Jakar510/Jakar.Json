@@ -37,8 +37,7 @@ public sealed class JakarJsonRestSerializer( IRestSerializer? fallback = null ) 
 
         if ( !JsonCodecRegistry.TryGet(obj.GetType(), out JsonTypeCodec? codec) ) { return Fallback.Serializer.Serialize(obj); }
 
-        using PooledBufferWriter buffer = new();
-        codec.Write(obj, buffer);
+        using PooledBufferWriter buffer = codec.WriteToBuffer(obj);
         return Encoding.UTF8.GetString(buffer.WrittenSpan);
     }
 

@@ -49,8 +49,7 @@ public sealed class JakarJsonConverter<T> : JsonConverter<T>
             return;
         }
 
-        using PooledBufferWriter buffer = new();
-        __codec.Write(value, buffer);
+        using PooledBufferWriter buffer = __codec.WriteToBuffer(value);
         writer.WriteRawValue(buffer.WrittenSpan, skipInputValidation: true);
     }
 }

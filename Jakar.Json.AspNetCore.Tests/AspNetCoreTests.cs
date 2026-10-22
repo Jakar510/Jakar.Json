@@ -45,7 +45,7 @@ public sealed class AspNetCoreTests
         Assert.That(JsonCodecRegistry.TryGet(typeof(List<TestOrder>), out JsonTypeCodec? codec), Is.True);
 
         ArrayBufferWriter<byte> output = new();
-        codec!.Write(new[] { Samples.Order(1), Samples.Order(2) }, output); // any IEnumerable<T> is written
+        codec!.Write(new[] { Samples.Order(1), Samples.Order(2) }, ref output); // any IEnumerable<T> is written
         object? read = codec.Read(output.WrittenSpan);
 
         Assert.That(read, Is.TypeOf<List<TestOrder>>());

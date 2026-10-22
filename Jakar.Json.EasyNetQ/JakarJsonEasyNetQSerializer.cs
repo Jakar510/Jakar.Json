@@ -27,7 +27,7 @@ public sealed class JakarJsonEasyNetQSerializer( ISerializer fallback ) : ISeria
 
         PooledBufferWriter buffer = new();
 
-        try { codec.Write(message, buffer); }
+        try { codec.Write(message, ref buffer); }
         catch
         {
             buffer.Dispose();

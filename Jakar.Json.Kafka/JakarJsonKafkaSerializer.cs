@@ -22,8 +22,7 @@ public sealed class JakarJsonKafkaSerializer<T>() : ISerializer<T>, IAsyncSerial
     {
         if ( data is null ) { return null!; } // Kafka's null value
 
-        using PooledBufferWriter buffer = new();
-        __codec.Write(data, buffer);
+        using PooledBufferWriter buffer = __codec.WriteToBuffer(data);
         return buffer.ToArray();
     }
 

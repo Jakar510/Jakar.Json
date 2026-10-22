@@ -28,8 +28,7 @@ public sealed class JakarJsonAkkaSerializer( ExtendedActorSystem system ) : Seri
     {
         ArgumentNullException.ThrowIfNull(obj);
 
-        using PooledBufferWriter buffer = new();
-        JsonModels.RequiredCodec(obj.GetType()).Write(obj, buffer);
+        using PooledBufferWriter buffer = JsonModels.RequiredCodec(obj.GetType()).WriteToBuffer(obj);
         return buffer.ToArray();
     }
 

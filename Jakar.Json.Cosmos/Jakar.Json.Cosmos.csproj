@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<Version>10.1.0</Version>
+		<Version>10.2.0</Version>
 		<Description>Jakar.Json as the Azure Cosmos DB serializer: items of [JsonModel] types (and collections of them) are read and written by Jakar.Json; other types go to a System.Text.Json fallback, which also names members for LINQ queries.</Description>
 		<PackageTags>json azure cosmosdb cosmos nosql serializer linq source-generator</PackageTags>
-		<PackageReleaseNotes>10.1.0: initial release.</PackageReleaseNotes>
+		<PackageReleaseNotes>10.2.0: built against Jakar.Json 10.2.0, whose writers take a ref TWriter; 10.1.0 calls the removed IBufferWriter overloads and throws MissingMethodException with Jakar.Json 10.2.0. 10.1.0: initial release.</PackageReleaseNotes>
 		<!-- The Cosmos SDK itself isn't trimming-safe, and the System.Text.Json fallback uses reflection. -->
 		<IsAotCompatible>false</IsAotCompatible>
 	</PropertyGroup>

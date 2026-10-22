@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<Version>10.1.0</Version>
+		<Version>10.2.0</Version>
 		<Description>Jakar.Json for Microsoft's caches: a HybridCache serializer factory for [JsonModel] types (other types keep HybridCache's default), and IDistributedCache helpers that store models as Jakar.Json UTF-8 (zero-copy with IBufferDistributedCache).</Description>
 		<PackageTags>json hybridcache distributed-cache cache serializer source-generator aot zero-allocation utf8</PackageTags>
-		<PackageReleaseNotes>10.1.0: initial release.</PackageReleaseNotes>
+		<PackageReleaseNotes>10.2.0: built against Jakar.Json 10.2.0, whose writers take a ref TWriter; 10.1.0 calls the removed IBufferWriter overloads and throws MissingMethodException with Jakar.Json 10.2.0. 10.1.0: initial release.</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<Import Project="..\Shared\Integration.props" />

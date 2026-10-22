@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<Version>10.1.0</Version>
+		<Version>10.2.0</Version>
 		<Description>Jakar.Json for Confluent.Kafka: serializers and deserializers (sync and async) for [JsonModel] keys and values, and producer/consumer builder extensions.</Description>
 		<PackageTags>json kafka confluent messaging serializer deserializer source-generator aot zero-allocation utf8</PackageTags>
-		<PackageReleaseNotes>10.1.0: initial release.</PackageReleaseNotes>
+		<PackageReleaseNotes>10.2.0: built against Jakar.Json 10.2.0, whose writers take a ref TWriter; 10.1.0 calls the removed IBufferWriter overloads and throws MissingMethodException with Jakar.Json 10.2.0. 10.1.0: initial release.</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<Import Project="..\Shared\Integration.props" />

@@ -37,8 +37,7 @@ public sealed class JakarJsonObjectSerializer : ObjectSerializer, IMemberNameCon
             return;
         }
 
-        using PooledBufferWriter buffer = new();
-        codec.Write(value, buffer);
+        using PooledBufferWriter buffer = codec.WriteToBuffer(value);
         stream.Write(buffer.WrittenSpan);
     }
 
@@ -52,8 +51,7 @@ public sealed class JakarJsonObjectSerializer : ObjectSerializer, IMemberNameCon
             return;
         }
 
-        using PooledBufferWriter buffer = new();
-        codec.Write(value, buffer);
+        using PooledBufferWriter buffer = codec.WriteToBuffer(value);
         await stream.WriteAsync(buffer.WrittenMemory, cancellationToken).ConfigureAwait(false);
     }
 
@@ -62,8 +60,7 @@ public sealed class JakarJsonObjectSerializer : ObjectSerializer, IMemberNameCon
         inputType ??= value?.GetType() ?? typeof(object);
         if ( !JsonCodecRegistry.TryGet(inputType, out JsonTypeCodec? codec) ) { return Fallback.Serialize(value, inputType, cancellationToken); }
 
-        using PooledBufferWriter buffer = new();
-        codec.Write(value, buffer);
+        using PooledBufferWriter buffer = codec.WriteToBuffer(value);
         return new BinaryData(buffer.ToArray());
     }
 

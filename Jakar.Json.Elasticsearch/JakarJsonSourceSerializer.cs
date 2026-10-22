@@ -56,8 +56,7 @@ public sealed class JakarJsonSourceSerializer( Serializer fallback ) : Serialize
             return;
         }
 
-        using PooledBufferWriter buffer = new();
-        codec.Write(data, buffer);
+        using PooledBufferWriter buffer = codec.WriteToBuffer(data);
         stream.Write(buffer.WrittenSpan);
     }
 
@@ -75,8 +74,7 @@ public sealed class JakarJsonSourceSerializer( Serializer fallback ) : Serialize
             return;
         }
 
-        using PooledBufferWriter buffer = new();
-        codec.Write(data, buffer);
+        using PooledBufferWriter buffer = codec.WriteToBuffer(data);
         await stream.WriteAsync(buffer.WrittenMemory, cancellationToken).ConfigureAwait(false);
     }
 

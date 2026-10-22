@@ -6,13 +6,13 @@
 		<ImplicitUsings>disable</ImplicitUsings>
 		<RootNamespace>Jakar.Json.FusionCache</RootNamespace>
 		<AssemblyName>Jakar.Json.FusionCache</AssemblyName>
-		<Version>10.1.0</Version>
+		<Version>10.2.0</Version>
 		<Title>Jakar.Json.FusionCache</Title>
 		<PackageId>Jakar.Json.FusionCache</PackageId>
 		<Authors>Tyler Stegmaier</Authors>
 		<Description>Jakar.Json as FusionCache's distributed-cache serializer: [JsonModel] values (and collections of them) are written by Jakar.Json, common scalars in binary, inside a compact binary entry envelope. Other types can go to a fallback serializer. Reflection-free under Native AOT.</Description>
 		<PackageTags>json fusioncache cache distributed-cache serializer source-generator aot zero-allocation utf8</PackageTags>
-		<PackageReleaseNotes>10.1.0: initial release.</PackageReleaseNotes>
+		<PackageReleaseNotes>10.2.0: built against Jakar.Json 10.2.0, whose writers take a ref TWriter; 10.1.0 calls the removed IBufferWriter overloads and throws MissingMethodException with Jakar.Json 10.2.0. 10.1.0: initial release.</PackageReleaseNotes>
 		<PackageIcon>icon.png</PackageIcon>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<PackageReadmeFile>README.md</PackageReadmeFile>

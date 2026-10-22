@@ -24,8 +24,7 @@ public sealed class JakarJsonFlurlSerializer( ISerializer? fallback = null ) : I
     {
         if ( obj is null || !JsonCodecRegistry.TryGet(obj.GetType(), out JsonTypeCodec? codec) ) { return Fallback.Serialize(obj); }
 
-        using PooledBufferWriter buffer = new();
-        codec.Write(obj, buffer);
+        using PooledBufferWriter buffer = codec.WriteToBuffer(obj);
         return Encoding.UTF8.GetString(buffer.WrittenSpan);
     }
 

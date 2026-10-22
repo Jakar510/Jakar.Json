@@ -24,8 +24,7 @@ public sealed class JakarJsonDataConverter( DataConverter? fallback = null ) : D
     {
         if ( value is null || !JsonCodecRegistry.TryGet(value.GetType(), out JsonTypeCodec? codec) ) { return Fallback.Serialize(value); }
 
-        using PooledBufferWriter buffer = new();
-        codec.Write(value, buffer);
+        using PooledBufferWriter buffer = codec.WriteToBuffer(value);
         return Encoding.UTF8.GetString(buffer.WrittenSpan);
     }
 

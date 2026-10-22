@@ -69,7 +69,7 @@ public sealed class JakarJsonHttpResult<T> : IResult, IStatusCodeHttpResult, IVa
                                           static ( body, state ) =>
                                           {
                                               if ( state.Value is null ) { body.Write("null"u8); }
-                                              else { JsonCodec.WriteJson(in state.Value, body, state.options); }
+                                              else { JsonCodec.WriteJson(in state.Value, ref body, state.options); }
                                           });
     }
 
@@ -120,15 +120,15 @@ public sealed class JakarJsonArrayHttpResult<T> : IResult, IStatusCodeHttpResult
                                               switch ( state.Value )
                                               {
                                                   case T[] array:
-                                                      JsonCodec.WriteJsonArray(array.AsSpan(), body, state.options);
+                                                      JsonCodec.WriteJsonArray(array.AsSpan(), ref body, state.options);
                                                       break;
 
                                                   case List<T> list:
-                                                      JsonCodec.WriteJsonArray((ReadOnlySpan<T>)System.Runtime.InteropServices.CollectionsMarshal.AsSpan(list), body, state.options);
+                                                      JsonCodec.WriteJsonArray((ReadOnlySpan<T>)System.Runtime.InteropServices.CollectionsMarshal.AsSpan(list), ref body, state.options);
                                                       break;
 
                                                   default:
-                                                      JsonCodec.WriteJsonArray(state.Value, body, state.options);
+                                                      JsonCodec.WriteJsonArray(state.Value, ref body, state.options);
                                                       break;
                                               }
                                           });
@@ -155,5 +155,5 @@ internal sealed class JakarJsonObjectResult( JsonTypeCodec codec, object value )
                                                                                   StatusCodes.Status200OK,
                                                                                   JakarJsonBodies.JSON_CONTENT_TYPE,
                                                                                   ( Codec: codec, Value: value, Options: JakarJsonOptions.From(context).WriterOptions ),
-                                                                                  static ( body, state ) => state.Codec.Write(state.Value, body, state.Options));
+                                                                                  static ( body, state ) => state.Codec.Write(state.Value, ref body, state.Options));
 }

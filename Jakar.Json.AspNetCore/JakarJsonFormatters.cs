@@ -93,7 +93,7 @@ public sealed class JakarJsonOutputFormatter : TextOutputFormatter
         if ( !JsonCodecRegistry.TryGet(type, out JsonTypeCodec? codec) ) { throw new InvalidOperationException($"{type} has no Jakar.Json codec."); }
 
         PipeWriter body = context.HttpContext.Response.BodyWriter;
-        codec.Write(context.Object, body, __options.WriterOptions);
+        codec.Write(context.Object, ref body, __options.WriterOptions);
         await body.FlushAsync(context.HttpContext.RequestAborted).ConfigureAwait(false);
     }
 }

@@ -46,8 +46,7 @@ public sealed class JakarJsonTypeHandler( Type type ) : SqlMapper.ITypeHandler
             return;
         }
 
-        using PooledBufferWriter buffer = new();
-        codec.Write(value, buffer);
+        using PooledBufferWriter buffer = codec.WriteToBuffer(value);
         parameter.Value = Encoding.UTF8.GetString(buffer.WrittenSpan);
     }
 

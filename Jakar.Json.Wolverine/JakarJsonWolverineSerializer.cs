@@ -26,8 +26,7 @@ public sealed class JakarJsonWolverineSerializer( IMessageSerializer fallback ) 
         ArgumentNullException.ThrowIfNull(envelope);
         if ( envelope.Message is not { } message || !JsonCodecRegistry.TryGet(message.GetType(), out JsonTypeCodec? codec) ) { return Fallback.Write(envelope); }
 
-        using PooledBufferWriter buffer = new();
-        codec.Write(message, buffer);
+        using PooledBufferWriter buffer = codec.WriteToBuffer(message);
         return buffer.ToArray();
     }
 
@@ -36,8 +35,7 @@ public sealed class JakarJsonWolverineSerializer( IMessageSerializer fallback ) 
         ArgumentNullException.ThrowIfNull(message);
         if ( !JsonCodecRegistry.TryGet(message.GetType(), out JsonTypeCodec? codec) ) { return Fallback.WriteMessage(message); }
 
-        using PooledBufferWriter buffer = new();
-        codec.Write(message, buffer);
+        using PooledBufferWriter buffer = codec.WriteToBuffer(message);
         return buffer.ToArray();
     }
 

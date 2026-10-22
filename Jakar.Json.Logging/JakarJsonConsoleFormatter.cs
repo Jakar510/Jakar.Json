@@ -145,8 +145,7 @@ public sealed class JakarJsonConsoleFormatter : ConsoleFormatter, IDisposable
 
         if ( JsonCodecRegistry.TryGet(value.GetType(), out JsonTypeCodec? codec) )
         {
-            using PooledBufferWriter model = new();
-            codec.Write(value, model);
+            using PooledBufferWriter model = codec.WriteToBuffer(value);
             writer.WriteRawValue(model.WrittenSpan, skipInputValidation: true);
             return;
         }

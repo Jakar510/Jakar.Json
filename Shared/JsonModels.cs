@@ -28,19 +28,17 @@ internal static class JsonModels<T>
     public static JsonTypeCodec RequiredCodec => Codec ?? throw Unsupported();
 
 
-    public static void Write( T? value, IBufferWriter<byte> output ) => RequiredCodec.Write(value, output);
+    public static void Write( T? value, IBufferWriter<byte> output ) => RequiredCodec.Write(value, ref output);
 
     public static byte[] ToUtf8( T? value )
     {
-        using PooledBufferWriter buffer = new();
-        RequiredCodec.Write(value, buffer);
+        using PooledBufferWriter buffer = RequiredCodec.WriteToBuffer(value);
         return buffer.ToArray();
     }
 
     public static async ValueTask WriteAsync( T? value, Stream stream, CancellationToken token = default )
     {
-        using PooledBufferWriter buffer = new();
-        RequiredCodec.Write(value, buffer);
+        using PooledBufferWriter buffer = RequiredCodec.WriteToBuffer(value);
         await stream.WriteAsync(buffer.WrittenMemory, token).ConfigureAwait(false);
     }
 
@@ -64,6 +62,23 @@ internal static class JsonModels
     public static JsonTypeCodec RequiredCodec( Type type ) => JsonCodecRegistry.TryGet(type, out JsonTypeCodec? codec)
                                                                   ? codec
                                                                   : throw Unsupported(type);
+
+    /// <summary> Writes <paramref name="value"/> into a new <see cref="PooledBufferWriter"/>, which the caller disposes. </summary>
+    public static PooledBufferWriter WriteToBuffer( this JsonTypeCodec codec, object? value )
+    {
+        PooledBufferWriter buffer = new();
+
+        try
+        {
+            codec.Write(value, ref buffer);
+            return buffer;
+        }
+        catch
+        {
+            buffer.Dispose();
+            throw;
+        }
+    }
 
     public static NotSupportedException Unsupported( Type type ) => new($"{type} isn't a [JsonModel] type or an array, list or collection interface of one, so Jakar.Json can't serialize it");
 }

@@ -119,7 +119,7 @@ internal static class ValueCodec<T>
         switch ( Kind )
         {
             case ValueKind.Json:
-                __json!.Write(value, buffer);
+                __json!.Write(value, ref buffer);
                 return;
 
             case ValueKind.String:

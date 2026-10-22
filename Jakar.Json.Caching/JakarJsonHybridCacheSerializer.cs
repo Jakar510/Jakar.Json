@@ -34,7 +34,7 @@ public sealed class JakarJsonHybridCacheSerializer<T>() : IHybridCacheSerializer
     private readonly JsonTypeCodec __codec = JsonModels<T>.RequiredCodec;
 
 
-    public void Serialize( T value, IBufferWriter<byte> target ) => __codec.Write(value, target);
+    public void Serialize( T value, IBufferWriter<byte> target ) => __codec.Write(value, ref target);
 
     public T Deserialize( ReadOnlySequence<byte> source ) => (T)__codec.Read(source)!;
 }

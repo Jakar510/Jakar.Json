@@ -57,7 +57,7 @@ public sealed class JakarJsonTempDataSerializer( TempDataSerializer inner ) : Te
     private static string Encode( object value, JsonTypeCodec codec )
     {
         ArrayBufferWriter<byte> buffer = new();
-        codec.Write(value, buffer);
+        codec.Write(value, ref buffer);
         return string.Concat(MARKER, value.GetType().AssemblyQualifiedName, "\n", Encoding.UTF8.GetString(buffer.WrittenSpan));
     }
 

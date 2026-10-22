@@ -29,8 +29,7 @@ public sealed class JakarJsonPlainConverter( JsonPlainConverter fallback ) : IEn
     {
         if ( value is null || !JsonCodecRegistry.TryGet(value.GetType(), out JsonTypeCodec? codec) ) { return Fallback.TryToPayload(value, out payload); }
 
-        using PooledBufferWriter buffer = new();
-        codec.Write(value, buffer);
+        using PooledBufferWriter buffer = codec.WriteToBuffer(value);
 
         payload = new Payload { Data = ByteString.CopyFrom(buffer.WrittenSpan) };
         payload.Metadata["encoding"] = __encoding;

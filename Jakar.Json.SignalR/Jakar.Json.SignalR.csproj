@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<Version>10.1.0</Version>
+		<Version>10.2.0</Version>
 		<Description>Jakar.Json for SignalR's JSON hub protocol: hub method arguments and results of [JsonModel] types are written and read by Jakar.Json, on servers and .NET clients alike.</Description>
 		<PackageTags>json signalr realtime websockets hub-protocol source-generator</PackageTags>
-		<PackageReleaseNotes>10.1.0: initial release.</PackageReleaseNotes>
+		<PackageReleaseNotes>10.2.0: built against Jakar.Json 10.2.0, whose writers take a ref TWriter; 10.1.0 calls the removed IBufferWriter overloads and throws MissingMethodException with Jakar.Json 10.2.0. 10.1.0: initial release.</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<Import Project="..\Shared\Integration.props" />

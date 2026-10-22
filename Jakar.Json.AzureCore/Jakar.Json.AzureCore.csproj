@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<Version>10.1.0</Version>
+		<Version>10.2.0</Version>
 		<Description>Jakar.Json as an Azure SDK ObjectSerializer (Azure.Core): [JsonModel] types are read and written by Jakar.Json in Azure Search, Functions (isolated worker), Event Grid, Service Bus / Event Hubs payloads and every SDK that takes an ObjectSerializer; other types go to a fallback.</Description>
 		<PackageTags>json azure azure-sdk objectserializer search functions servicebus eventhubs serializer source-generator</PackageTags>
-		<PackageReleaseNotes>10.1.0: initial release.</PackageReleaseNotes>
+		<PackageReleaseNotes>10.2.0: built against Jakar.Json 10.2.0, whose writers take a ref TWriter; 10.1.0 calls the removed IBufferWriter overloads and throws MissingMethodException with Jakar.Json 10.2.0. 10.1.0: initial release.</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<Import Project="..\Shared\Integration.props" />

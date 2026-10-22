@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<Version>10.1.0</Version>
+		<Version>10.2.0</Version>
 		<Description>Jakar.Json as the Elasticsearch .NET client's source serializer: documents (_source) of [JsonModel] types are written and read by Jakar.Json; other types go to the client's default System.Text.Json source serializer.</Description>
 		<PackageTags>json elasticsearch elastic search source-serializer source-generator</PackageTags>
-		<PackageReleaseNotes>10.1.0: initial release.</PackageReleaseNotes>
+		<PackageReleaseNotes>10.2.0: built against Jakar.Json 10.2.0, whose writers take a ref TWriter; 10.1.0 calls the removed IBufferWriter overloads and throws MissingMethodException with Jakar.Json 10.2.0. 10.1.0: initial release.</PackageReleaseNotes>
 		<!-- The Elasticsearch client isn't trimming-safe. -->
 		<IsAotCompatible>false</IsAotCompatible>
 	</PropertyGroup>
