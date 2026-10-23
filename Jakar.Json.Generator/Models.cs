@@ -87,8 +87,7 @@ internal enum ShapeKind : byte
     Dictionary,
     Map,
     Node,
-    Collection, // IJsonCollection<TSelf, T>: the collection writes its elements and is built from a span
-    Element     // System.Text.Json's JsonElement
+    Collection // IJsonCollection<TSelf, T>: the collection writes its elements and is built from a span
 }
 
 
@@ -173,7 +172,6 @@ internal sealed record MemberInfo
     public required bool                 RequiredAttribute    { get; init; }
     public required string?              Converter            { get; init; } // a converter type that fits; null otherwise
     public required bool                 IsExtensionData      { get; init; }
-    public required bool                 ExtensionElements    { get; init; } // the extension-data bag holds JsonElement values (Dictionary<string, JsonElement>), not JNode
     public required Settings             Settings             { get; init; }
     public required int                  BaseDepth            { get; init; } // 0 for the most-base declaring type
     public required string               FilePath             { get; init; }
@@ -237,7 +235,7 @@ internal sealed record ModelInfo
     public required bool                           IsValueType         { get; init; }
     public required bool                           IsAbstract          { get; init; }
     public required bool                           IsSealed            { get; init; }
-    public required Settings                       Settings            { get; init; } // [JsonModel] on the type, over its mirrored context
+    public required Settings                       Settings            { get; init; } // [JsonModel] on the type
     public required EquatableArray<MemberInfo>     Members             { get; init; }
     public required ConstructionInfo               Construction        { get; init; }
     public required string                         Discriminator       { get; init; }
@@ -246,9 +244,6 @@ internal sealed record ModelInfo
     public required bool                           HasSerializableBase { get; init; } // a base type already has generated members: hide them with 'new'
     public required EquatableArray<string>         Skip                { get; init; } // generated members the type already declares
     public required bool                           OverridesToString   { get; init; }
-    public required bool                           ContextRequested    { get; init; } // a System.Text.Json context backs it: the [JsonModel] part implements IJsonModel's members (with this code when it can), so only the contract members are emitted here
-    public required int                            Implementation      { get; init; } // Values.IMPLEMENTATION_*
-    public required bool                           OptionalConstructorParameters { get; init; } // mirrors System.Text.Json: a missing constructor parameter is its default, not an error
     public required LocationInfo?                  AttributeLocation   { get; init; }
     public required EquatableArray<DiagnosticInfo> Diagnostics         { get; init; }
     public required bool                           IsFatal             { get; init; }

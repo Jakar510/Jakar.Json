@@ -29,8 +29,7 @@ public static class JsonDiagnostics
     public const string DETERMINISM_WEAKENED = "JJSON013";
     public const string INVALID_DERIVED      = "JJSON014";
     public const string MISSING_ATTRIBUTE    = "JJSON015";
-    public const string STJ_FALLBACK         = "JJSON016";
-    public const string JAKAR_REQUIRED       = "JJSON017";
+    // JJSON016 (System.Text.Json fallback) and JJSON017 (Implementation = JakarJson) are retired with the System.Text.Json support. IDs are never reused.
 
     /// <summary> Diagnostic property for code fixes: the member names that need an <c>Order</c>, comma separated. </summary>
     public const string MEMBERS = "Members";
@@ -43,7 +42,7 @@ public static class JsonDiagnostics
 
     public static readonly DiagnosticDescriptor GenericUnsupported = Create(GENERIC_UNSUPPORTED, "Type parameter can't be serialized statically", "Member '{0}' uses type parameter '{1}', which needs a constraint the generated code can dispatch on: 'where {1} : IJsonSerializable<{1}>', or 'where {1} : ISpanFormattable, ISpanParsable<{1}>'", DiagnosticSeverity.Error);
 
-    public static readonly DiagnosticDescriptor UnsupportedMember = Create(UNSUPPORTED_MEMBER, "Member type isn't supported", "Member '{0}' has type '{1}', which Jakar.Json can't read or write: {2}. Add [JsonMember(Converter = typeof(...))] with an IJsonConverter<{1}>, or [JsonMember(Ignore = true)].", DiagnosticSeverity.Error);
+    public static readonly DiagnosticDescriptor UnsupportedMember = Create(UNSUPPORTED_MEMBER, "Member type isn't supported", "Member '{0}' has type '{1}', which Jakar.Json can't read or write: {2}. Add [JsonMember(Converter = typeof(...))] with an IJsonConverter<{1}>, or [JsonSkip].", DiagnosticSeverity.Error);
 
     public static readonly DiagnosticDescriptor NoConstructor = Create(NO_CONSTRUCTOR, "No usable constructor", "{0}", DiagnosticSeverity.Error);
 
@@ -61,21 +60,13 @@ public static class JsonDiagnostics
 
     public static readonly DiagnosticDescriptor InvalidConverter = Create(INVALID_CONVERTER, "Converter doesn't fit the member", "Converter '{0}' on member '{1}' must implement IJsonConverter<{2}>", DiagnosticSeverity.Error);
 
-    public static readonly DiagnosticDescriptor NotRead = Create(NOT_READ, "Member is written but never read", "Member '{0}' has no setter and no matching constructor parameter, so it's written but ignored when reading", DiagnosticSeverity.Info);
+    public static readonly DiagnosticDescriptor NotRead = Create(NOT_READ, "Member is written but never read", "Member '{0}' has no setter and no matching constructor parameter, so it's written but ignored when reading; [JsonMember(ReadOnly = JsonReadOnlyMembers.Ignore)] or [JsonModel(ReadOnlyMembers = JsonReadOnlyMembers.Ignore)] leaves it out", DiagnosticSeverity.Info);
 
-    public static readonly DiagnosticDescriptor InvalidMemberType = Create(INVALID_MEMBER_TYPE, "Member type can't be serialized", "Member '{0}' has type '{1}' ({2}), which has no JSON form; ignore it with [JsonMember(Ignore = true)]", DiagnosticSeverity.Error);
+    public static readonly DiagnosticDescriptor InvalidMemberType = Create(INVALID_MEMBER_TYPE, "Member type can't be serialized", "Member '{0}' has type '{1}' ({2}), which has no JSON form; ignore it with [JsonSkip]", DiagnosticSeverity.Error);
 
     public static readonly DiagnosticDescriptor DeterminismWeakened = Create(DETERMINISM_WEAKENED, "Output may differ for the same value", "{0}", DiagnosticSeverity.Warning, "SPEC.md §5.4: idempotency guarantee I1 (same value, same bytes) is weakened by this setting.");
 
     public static readonly DiagnosticDescriptor InvalidDerived = Create(INVALID_DERIVED, "Invalid [JsonDerived]", "{0}", DiagnosticSeverity.Error);
 
     public static readonly DiagnosticDescriptor MissingAttribute = Create(MISSING_ATTRIBUTE, "IJsonSerializable<T> without [JsonModel]", "'{0}' lists IJsonSerializable<{0}> but has no [JsonModel] and doesn't implement it; add [JsonModel]", DiagnosticSeverity.Error);
-
-    public static readonly DiagnosticDescriptor SystemTextJsonFallback = Create(STJ_FALLBACK,
-                                                                                "[JsonModel] uses System.Text.Json",
-                                                                                "'{0}' uses System.Text.Json for its IJsonModel members: Jakar.Json can't implement it ({1})",
-                                                                                DiagnosticSeverity.Info,
-                                                                                "A context-backed [JsonModel] uses Jakar.Json (faster, fewer allocations) when it supports every member and the context's options. Fix the reason to move it to Jakar.Json, or set Implementation = SystemTextJson to say System.Text.Json is intended.");
-
-    public static readonly DiagnosticDescriptor JakarJsonRequired = Create(JAKAR_REQUIRED, "Implementation = JakarJson isn't possible", "'{0}' has Implementation = JakarJson, but Jakar.Json can't implement it: {1}", DiagnosticSeverity.Error);
 }

@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<Version>10.2.0</Version>
+		<Version>10.3.0</Version>
 		<Description>Jakar.Json inside System.Text.Json: a JsonConverterFactory that reads and writes [JsonModel] types (and collections of them) with Jakar.Json wherever System.Text.Json is configured - SignalR, Blazor, HttpClient, Npgsql, Dapr, Azure SDKs, Microsoft.Extensions.AI and more.</Description>
 		<PackageTags>json system.text.json converter source-generator aot zero-allocation utf8</PackageTags>
-		<PackageReleaseNotes>10.2.0: built against Jakar.Json 10.2.0, whose writers take a ref TWriter; 10.1.0 calls the removed IBufferWriter overloads and throws MissingMethodException with Jakar.Json 10.2.0. 10.1.0: initial release.</PackageReleaseNotes>
+		<PackageReleaseNotes>10.3.0: Jakar.Json's JsonReadException (no longer a JsonException) is rethrown as a System.Text.Json JsonException with its path and position. Built against Jakar.Json 10.3.0. 10.2.0: built against Jakar.Json 10.2.0, whose writers take a ref TWriter; 10.1.0 calls the removed IBufferWriter overloads and throws MissingMethodException with Jakar.Json 10.2.0. 10.1.0: initial release.</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<Import Project="..\Shared\Integration.props" />

@@ -27,7 +27,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Jakar.Json\Jakar.Json.csproj" />
-		<!-- End-to-end: the real generator runs on the test models, both parts ([GenerateJson], [JsonModel] in SystemTextJson/, and both together in SideBySideTests.cs). -->
+		<!-- End-to-end: the real generator runs on the test models. -->
 		<ProjectReference Include="..\Jakar.Json.Generator\Jakar.Json.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 	</ItemGroup>
 </Project>

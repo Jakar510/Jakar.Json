@@ -86,13 +86,13 @@ public ref struct JNodeWriter : IJsonWriter
     public void WriteFloat<T>( T value )
         where T : IFloatingPoint<T>
     {
-        if ( !T.IsFinite(value) ) { throw new JsonWriteException(new JsonError(JsonErrorKind.NonFiniteNumber, 0, 0, 0), $"JSON has no {JsonNumbers.NonFiniteName(value)}; use NonFiniteFloats = AsString to write it as a string."); }
-
+        // NaN and ±Infinity stay numbers in the tree (float and double nodes hold them); they're written as strings.
         JValueNode node;
 
         if ( typeof(T)      == typeof(double) ) { node  = new JValueNode(Unsafe.BitCast<T, double>(value)); }
         else if ( typeof(T) == typeof(float) ) { node   = new JValueNode(Unsafe.BitCast<T, float>(value)); }
         else if ( typeof(T) == typeof(decimal) ) { node = new JValueNode(Unsafe.BitCast<T, decimal>(value)); }
+        else if ( !T.IsFinite(value) ) { node           = new JValueNode(double.CreateSaturating(value)); } // Half: its NaN and ±Infinity as a double
         else
         {
             Span<char> buffer = stackalloc char[64];

@@ -133,6 +133,20 @@ public enum JsonUnorderedCollections : byte
 
 
 
+/// <summary> What happens to a member that can't be read back: a get-only property or <see langword="readonly"/> field that no constructor parameter binds (typically a computed property). </summary>
+public enum JsonReadOnlyMembers : byte
+{
+    Inherit,
+
+    /// <summary> Written, and skipped when reading (the default; JJSON011 notes it). </summary>
+    Write,
+
+    /// <summary> Neither written nor read, as if it had <see cref="JsonSkipAttribute"/>. </summary>
+    Ignore
+}
+
+
+
 /// <summary> Which characters a writer escapes besides <c>"</c>, <c>\</c> and control characters. </summary>
 public enum JsonEscaping : byte
 {
@@ -175,6 +189,10 @@ public abstract class JsonSettingsAttribute : Attribute
     public JsonNonFiniteFloats      NonFiniteFloats      { get; set; } = JsonNonFiniteFloats.Inherit;
     public JsonLocalDateTimes       LocalDateTimes       { get; set; } = JsonLocalDateTimes.ConvertToUtc;
     public JsonUnorderedCollections UnorderedCollections { get; set; } = JsonUnorderedCollections.Sorted;
+
+    /// <summary> Whether get-only members that no constructor parameter binds (computed properties) are written (default) or ignored. <see cref="JsonMemberAttribute.ReadOnly"/> overrides it per member. </summary>
+    public JsonReadOnlyMembers ReadOnlyMembers { get; set; } = JsonReadOnlyMembers.Inherit;
+
     public JsonEscaping             Escaping             { get; set; } = JsonEscaping.Inherit;
     public JsonToggle               Indented             { get; set; } = JsonToggle.On;
     public JsonIndentChar           IndentChar           { get; set; } = JsonIndentChar.Tab;
@@ -217,7 +235,7 @@ public sealed class JsonMemberAttribute : Attribute
     /// <summary> Reading fails when the member is missing. Constructor parameters without defaults and <see langword="required"/> members are always required. </summary>
     public bool Required { get; set; }
 
-    /// <summary> Collects unknown members (with <c>UnknownMembers = Capture</c>): an <c>OrderedDictionary&lt;string, JNode?&gt;</c> or <c>JObjectNode</c>. </summary>
+    /// <summary> Collects the JSON members the type doesn't declare and writes them back: an <c>OrderedDictionary&lt;string, JNode?&gt;</c> or <c>JObjectNode</c> (same as <see cref="JsonOverflowAttribute"/>). </summary>
     public bool ExtensionData { get; set; }
 
     /// <summary> A <see langword="struct"/> (or class) implementing <c>IJsonConverter&lt;T&gt;</c> for the member's type. </summary>
@@ -231,6 +249,9 @@ public sealed class JsonMemberAttribute : Attribute
     public JsonNonFiniteFloats      NonFiniteFloats      { get; set; }
     public JsonLocalDateTimes       LocalDateTimes       { get; set; }
     public JsonUnorderedCollections UnorderedCollections { get; set; }
+
+    /// <summary> For a get-only member that no constructor parameter binds: <see cref="JsonReadOnlyMembers.Write"/> or <see cref="JsonReadOnlyMembers.Ignore"/> it, overriding the type's <c>ReadOnlyMembers</c>. </summary>
+    public JsonReadOnlyMembers ReadOnly { get; set; }
 }
 
 

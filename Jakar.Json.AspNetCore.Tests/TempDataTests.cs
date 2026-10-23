@@ -3,6 +3,8 @@
 
 using System.Net;
 using System.Net.Http.Json;
+using System.Reflection;
+using System.Runtime.Loader;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -63,6 +65,36 @@ public sealed class TempDataTests
                             Assert.That(back["note"],                               Is.EqualTo("rush"));
                             Assert.That(back["count"],                              Is.EqualTo(3));
                         });
+    }
+
+    /// <summary> Test runners and plugin hosts can load an assembly twice (Rider's runner does): the stored type name must come back as the type the app uses, not a second copy of it. </summary>
+    [Test] public void Deserialize_ReadsTheLoadedType_NotASecondCopy()
+    {
+        ServiceCollection services = new();
+        services.AddLogging();
+        services.AddControllersWithViews().AddJakarJsonTempData();
+
+        using ServiceProvider provider   = services.BuildServiceProvider();
+        TempDataSerializer    serializer = provider.GetRequiredService<TempDataSerializer>();
+        byte[]                data       = serializer.Serialize(new Dictionary<string, object> { ["order"] = __order, ["orders"] = new List<TestOrder> { __order } });
+
+        AssemblyLoadContext copy = new("second copy", isCollectible: true);
+
+        try
+        {
+            Assembly second = copy.LoadFromAssemblyPath(typeof(TestOrder).Assembly.Location);
+            Assert.That(second, Is.Not.SameAs(typeof(TestOrder).Assembly), "the setup really loads a second copy");
+
+            IDictionary<string, object> back;
+            using ( copy.EnterContextualReflection() ) { back = serializer.Deserialize(data); } // where Type.GetType would find the copy
+
+            Assert.Multiple(() =>
+                            {
+                                Assert.That(back["order"],  Is.InstanceOf<TestOrder>().And.EqualTo(__order));
+                                Assert.That(back["orders"], Is.InstanceOf<List<TestOrder>>());
+                            });
+        }
+        finally { copy.Unload(); }
     }
 
     [Test] public void WithoutViews_Throws() => Assert.Throws<InvalidOperationException>(() => new ServiceCollection().AddControllers().AddJakarJsonTempData());

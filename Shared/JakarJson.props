@@ -1,0 +1,21 @@
+<Project>
+	<!--
+		How a project gets Jakar.Json and its [JsonModel] generator:
+		- Release: the released package (bump its version in Directory.Packages.props to use a newer one). PrivateAssets="none" passes the generator on to this package's consumers and to the
+		  projects referencing this one.
+		- Any other configuration: the Jakar.Json project in this repository, so changes to it are used without packing. The generator is added as an analyzer, which a project reference doesn't
+		  pass on: projects that get Jakar.Json through another project (tests, samples) set JakarJsonGeneratorOnly to true and import this file for the generator alone.
+	-->
+	<PropertyGroup>
+		<JakarJsonGeneratorOnly Condition="'$(JakarJsonGeneratorOnly)' == ''">false</JakarJsonGeneratorOnly>
+	</PropertyGroup>
+
+	<ItemGroup Condition="'$(Configuration)' == 'Release' and '$(JakarJsonGeneratorOnly)' != 'true'">
+		<PackageReference Include="Jakar.Json" PrivateAssets="none" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(Configuration)' != 'Release'">
+		<ProjectReference Include="$(MSBuildThisFileDirectory)..\Jakar.Json\Jakar.Json.csproj" Condition="'$(JakarJsonGeneratorOnly)' != 'true'" />
+		<ProjectReference Include="$(MSBuildThisFileDirectory)..\Jakar.Json.Generator\Jakar.Json.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+	</ItemGroup>
+</Project>

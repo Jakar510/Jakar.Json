@@ -25,7 +25,7 @@ internal static class Naming
                                                              };
 
 
-    /// <summary> System.Text.Json's camel case: the leading run of capitals is lowered (<c>URLValue</c> → <c>urlValue</c>, <c>ID</c> → <c>id</c>). </summary>
+    /// <summary> Camel case: the leading run of capitals is lowered (<c>URLValue</c> → <c>urlValue</c>, <c>ID</c> → <c>id</c>). </summary>
     public static string CamelCase( string name )
     {
         if ( name.Length == 0 || !char.IsUpper(name[0]) ) { return name; }

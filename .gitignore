@@ -368,3 +368,6 @@ MigrationPlan.md
 PerformanceOptimizations.md
 AOT-plan.md
 AOT-plan.collections.md
+
+# CI packs Jakar.Json here for the integrations' Release restore.
+local-feed/

@@ -30,7 +30,7 @@ public sealed class JsonModelContractTests
                             Assert.That(Names<UpperSnakeStruct>(),     Is.EqualTo(new[] { "X_VALUE", "IS_ON" }));
                             Assert.That(Names<DeclaredModel>(),        Is.EqualTo(new[] { "camelAlready", "Pascal" }));
                             Assert.That(Names<Order>(),                Is.EqualTo(new[] { "id", "customer", "total", "lines" }));
-                            Assert.That(Names<ContextModel>(),         Is.EqualTo(new[] { "customer_name", "line_count" }), "from the System.Text.Json context's options");
+                            Assert.That(Names<ComputedModel>(),        Is.EqualTo(new[] { "customer_name", "line_count", "label" }), "ReadOnlyMembers = Ignore, with a member opting back in");
                         });
     }
 
@@ -94,7 +94,7 @@ public sealed class OpenApiDocumentTests
         app.MapGet("/attrs",    static () => TypedResults.Ok(new AttributeModel()));
         app.MapGet("/derived",  static () => TypedResults.Ok(new DerivedModel()));
         app.MapGet("/order",    static () => TypedResults.Ok(Samples.Order()));
-        app.MapGet("/context",  static () => TypedResults.Ok(new ContextModel()));
+        app.MapGet("/computed", static () => TypedResults.Ok(new ComputedModel()));
         app.MapGet("/plain",    static () => TypedResults.Ok(new PlainDto("x")));
     }
 
@@ -105,7 +105,7 @@ public sealed class OpenApiDocumentTests
         yield return new TestCaseData("AttributeModel",       new[] { "id", "display_name", "kept", "onlyWhenSet", "internalCount", "publicField", "readOnly" });
         yield return new TestCaseData("DerivedModel",         new[] { "BaseId", "Label", "Derived" });
         yield return new TestCaseData("Order",                new[] { "id", "customer", "total", "lines" });
-        yield return new TestCaseData("ContextModel",         new[] { "customer_name", "line_count" });
+        yield return new TestCaseData("ComputedModel",        new[] { "customer_name", "line_count", "label" });
         yield return new TestCaseData("PlainDto",             new[] { "name" }).SetDescription("non-models keep System.Text.Json's (web) names");
     }
 

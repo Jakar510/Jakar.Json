@@ -2,7 +2,7 @@
 
 Status: **Implemented** · 10/07/2026 (drafted 10/06/2026). Sections describe the shipped design; §12 and §13 record what was verified.
 
-A source-generated JSON serializer that does not use `System.Text.Json`. Generated code reads and writes JSON directly: writes go through `ValueStringBuilder` (UTF-16) or its UTF-8 sibling, and reads go through a span cursor. It uses the same pattern as the package's `[JsonModel]` part (System.Text.Json models, formerly `Jakar.SystemTextJson`; §2): you mark a `partial` type with an attribute, and an incremental generator implements a static-abstract interface on it.
+A source-generated JSON serializer that does not use `System.Text.Json`. Generated code reads and writes JSON directly: writes go through `ValueStringBuilder` (UTF-16) or its UTF-8 sibling, and reads go through a span cursor. You mark a `partial` type with an attribute, and an incremental generator implements a static-abstract interface on it.
 
 ---
 
@@ -24,27 +24,27 @@ A source-generated JSON serializer that does not use `System.Text.Json`. Generat
 - **Resumable, incremental parsing across buffer boundaries** (the `Utf8JsonReader` `isFinalBlock` model). Stream reads buffer the whole document into pooled memory first (§8.3). A resumable reader is a v2 candidate. Large line-delimited files (NDJSON) are streamed one line at a time instead (§8.2).
 - **Reference preservation (`$id`/`$ref`).** A cyclic graph fails at `MaxDepth` with a clear error.
 - **JSONPath / `SelectToken`.** This is a v2 candidate.
-- **Compatibility with `System.Text.Json` or Newtonsoft attributes at runtime.** The generator *does* read a few STJ attributes at compile time to make migration easier (§4.4).
+- **Compatibility with `System.Text.Json` or Newtonsoft attributes.** Neither is read; Jakar.Json has its own equivalent for each (§4.4).
 
 ---
 
 ## 2. Packages and projects
 
-The package also contains the System.Text.Json models (`IJsonModel<TSelf>`, `[JsonModel]`, `JsonModel`, `RentedArray<T>`, `SerializeAsStringJsonConverter<T>`), formerly the separate `Jakar.SystemTextJson` package (decision D7). They keep the `Jakar.Extensions` namespace and the `JAKAR_JSON001`–`007` diagnostics.
+Jakar.Json is standalone: no part of it depends on or interoperates with System.Text.Json (decision D10). The System.Text.Json models absorbed in 10.1 (decision D7) were removed in 10.3; hosts built on System.Text.Json are reached through the integration packages.
 
 | Project | TFM | Contents |
 |---|---|---|
 | `Jakar.Spans` | `net10.0` | `ValueStringBuilder`, `ValueUtf8Builder`, `ValueSpanReader<T>` and `Sizes`, moved out of `Jakar.Extensions` (§3.1). Its own repository ([Jakar.Spans](https://github.com/Jakar510/Jakar.Spans)); Jakar.Json references the package. |
-| `Jakar.Json` | `net10.0` | Attributes, `IJsonWriter`/`IJsonReader`, `JsonWriter`, `JsonUtf8Writer`, `JsonReader<TChar>`, the converters, `JsonCodec` helpers, `JsonTape`, the `JNode` DOM and its reader/writer, errors. `SystemTextJson/`: the `[JsonModel]` runtime and `JsonElementConverter`. Packs the generator and code fixes into `analyzers/dotnet/cs`. |
-| `Jakar.Json.Generator` | `netstandard2.0` | One `JsonGenerator` (`IIncrementalGenerator`) for `[JsonModel]`, which picks a mode per type (§7.7): Jakar.Json only, hybrid (`IJsonModel<TSelf>` on Jakar.Json, `ContextMirror` for the context's options), or System.Text.Json (`SystemTextJson/`). Analyzers: `JsonAnalyzer` (JJSON015), `JsonModelAnalyzer` (JAKAR_JSON006/007). Pinned to Roslyn 4.12. |
-| `Jakar.Json.Generator.CodeFixes` | `netstandard2.0` | Code fixes: add `partial` (JJSON001), freeze the order with `[JsonMember(Order = n)]` (JJSON006), add `[JsonModel]` (JJSON015); register in the context (JAKAR_JSON001), add `[JsonModel]` (JAKAR_JSON006). |
+| `Jakar.Json` | `net10.0` | Attributes, `IJsonWriter`/`IJsonReader`, `JsonWriter`, `JsonUtf8Writer`, `JsonReader<TChar>`, the converters, `JsonCodec` helpers, `JsonTape`, the `JNode` DOM and its reader/writer, errors. Packs the generator and code fixes into `analyzers/dotnet/cs`. |
+| `Jakar.Json.Generator` | `netstandard2.0` | One `JsonGenerator` (`IIncrementalGenerator`) for `[JsonModel]` (§7). Analyzer: `JsonAnalyzer` (JJSON015). Pinned to Roslyn 4.12. |
+| `Jakar.Json.Generator.CodeFixes` | `netstandard2.0` | Code fixes: add `partial` (JJSON001), freeze the order with `[JsonMember(Order = n)]` (JJSON006), add `[JsonModel]` (JJSON015). |
 | `Jakar.Json.Tests` | `net10.0` | Runtime, conformance, idempotency and allocation tests (§12). |
 | `Jakar.Json.Generator.Tests` | `net10.0` | Generated-source, diagnostic (JJSON001–015), code-fix and incrementality tests, using the `GeneratorHarness` pattern. |
 | `Jakar.Json.AspNetCore` | `net10.0` | MVC formatters and minimal API results, request bodies and an endpoint filter (`JsonCodecRegistry`). |
 | `Jakar.Json.Benchmarks` | — | Benchmarks against STJ source generation and Newtonsoft (§12.5). |
 | `AotCompatibility.TestApp` | — | Native AOT and trimming checks (§12). |
 
-**Namespace: `Jakar.Json`.** This breaks with the package-split convention (`Jakar.Extensions`) on purpose. `Jakar.Extensions` already contains `Json`, `JsonModelAttribute`, `IJsonModel<T>` and friends, and consumers commonly import `System.Text.Json` and `Newtonsoft.Json` too. A separate namespace plus collision-free type names (§4) lets all three coexist in one file.
+**Namespace: `Jakar.Json`.** This breaks with the package-split convention (`Jakar.Extensions`) on purpose. `Jakar.Extensions` already contains `Json` and friends, and consumers commonly import `System.Text.Json` and `Newtonsoft.Json` too. A separate namespace plus collision-free type names (§4) lets all three coexist in one file.
 
 **Dependency.** `Jakar.Json` references only `Jakar.Spans` (§3.1), never `Jakar.Extensions`, so it doesn't pull in the core library (decision D1). `Jakar.Extensions` depends on `Jakar.Json` (for `[JsonModel]`, and its user models also use `[JsonModel]`).
 
@@ -188,16 +188,17 @@ Because attribute properties can't be nullable, every settings enum has `Inherit
 | `NameMatching` | **`Exact`**, `OrdinalIgnoreCase` | read |
 | `NullValues` | **`Write`**, `Omit` | write |
 | `DefaultValues` | **`Write`**, `Omit` (omit members equal to `default(T)`) | write |
-| `UnknownMembers` | **`Skip`**, `Error`, `Capture` (needs a `[JsonMember(ExtensionData = true)]` member) | read |
+| `UnknownMembers` | **`Skip`**, `Error`, `Capture` (needs a `[JsonOverflow]` member, whose presence implies it) | read |
 | `DuplicateMembers` | **`Error`**, `LastWins` | read |
-| *(required members)* | always **`Error`** when missing: `required` members, constructor parameters without a default, `[JsonMember(Required = true)]`, STJ `[JsonRequired]` | read |
+| *(required members)* | always **`Error`** when missing: `required` members, constructor parameters without a default, `[JsonMember(Required = true)]`, `[JsonMandatory]` | read |
 | `Enums` | **`Name`**, `Number` (what is written; reading accepts a name or a number either way, like System.Text.Json's string-enum converter) | write (read accepts both) |
 | `EnumNaming` | **`AsDeclared`**, plus the `Naming` values | names (compile time) |
 | `NumbersFromStrings` | **`Disallow`**, `Allow` (`"42"` reads as `42`) | read |
 | `LargeIntegers` | **`Number`**, `String` (write `long`/`ulong`/`Int128` beyond ±2^53 as strings, for JavaScript consumers) | write |
-| `NonFiniteFloats` | **`Error`**, `AsString` (`"NaN"`, `"Infinity"`, `"-Infinity"`) | both |
+| `NonFiniteFloats` | **`AsString`** (`"NaN"`, `"Infinity"`, `"-Infinity"`; float, double, `Half`), `Error` | both |
 | `LocalDateTimes` | **`ConvertToUtc`** (decision D2), `WriteOffset`, `Error` | write (§5.3) |
 | `UnorderedCollections` | **`Sorted`**, `Enumeration` | write (§5.2) |
+| `ReadOnlyMembers` | **`Write`**, `Ignore`: a get-only member that no constructor parameter binds (a computed property) is left out instead of written-but-not-read | both (compile time) |
 | `Escaping` | **`Minimal`**, `AsciiOnly`, `HtmlSafe` (also escapes `<>&'+`) | write (writer option) |
 | `Indented` | **`false`** | write (writer option) |
 | `IndentChar` | **`Tab`** (`'\t'`), `Space` (`' '`) | write (writer option) |
@@ -222,8 +223,11 @@ public sealed partial record Invoice( Guid Id, decimal Total )
     [JsonMember(Name = "memo", Order = -1)]                        // per-member override
     public string? Notes { get; init; }
 
-    [JsonMember(Ignore = true)]
+    [JsonSkip]                                                     // or ReadOnlyMembers = Ignore for every computed member
     public decimal Tax => Total * 0.07m;
+
+    [JsonOverflow]                                                 // members the type doesn't declare, §7.6
+    public JObjectNode? Extra { get; init; }
 
     [JsonMember(Converter = typeof(UnixSecondsConverter))]         // custom converter, §7.4
     public DateTimeOffset Created { get; init; }
@@ -233,16 +237,23 @@ public sealed partial record Invoice( Guid Id, decimal Total )
 | Attribute | Targets | Members |
 |---|---|---|
 | `JsonDefaults` | assembly | every `JsonSettingsAttribute` setting |
-| `JsonModel` (`Jakar.Extensions`) | class, struct, record, record struct | every setting, plus `Discriminator` (§7.5), the optional System.Text.Json context and `Implementation` (§7.7) |
-| `JsonMember` | property, field | `Name`, `Order`, `Ignore`, `Required`, `ExtensionData`, `Converter`, and the per-member settings `NullValues`, `DefaultValues`, `Enums`, `NumbersFromStrings`, `LargeIntegers`, `NonFiniteFloats`, `LocalDateTimes`, `UnorderedCollections` |
+| `JsonModel` (`Jakar.Extensions`) | class, struct, record, record struct | every setting, plus `Discriminator` (§7.5) |
+| `JsonMember` | property, field | `Name`, `Order`, `Ignore`, `Required`, `ExtensionData`, `Converter`, and the per-member settings `NullValues`, `DefaultValues`, `Enums`, `NumbersFromStrings`, `LargeIntegers`, `NonFiniteFloats`, `LocalDateTimes`, `UnorderedCollections`, `ReadOnly` |
+| `JsonKey(string)` | property, field | `Name` |
+| `JsonOrder(int)` | property, field | `Order` |
+| `JsonSkip` | property, field | `Ignore`; `Condition = WhenNull` / `WhenDefault` instead means `NullValues` / `DefaultValues = Omit` |
+| `JsonMandatory` | property, field | `Required` |
+| `JsonOptIn` | property, field | includes a non-public member (or a field) |
+| `JsonOverflow` | property, field | `ExtensionData` (§7.6) |
+| `JsonCreator` | constructor | the constructor to read through (§7.4) |
 | `JsonDerived(Type, string tag)` | class | polymorphism (§7.5); the derived type needs `[JsonModel]` too |
 | `JsonEnumName(string)` | enum field | per-value name override. Not `[Conditional]`: it stays in metadata, so an assembly that uses the enum generates its codec from it. |
 
-Names checked to be free of collisions with `System.Text.Json` and Newtonsoft: `JsonModel`, `JsonDefaults`, `JsonMember`, `JsonDerived`, `JsonEnumName`.
+Names checked to be free of collisions with `System.Text.Json` and Newtonsoft: `JsonModel`, `JsonDefaults`, `JsonMember`, `JsonDerived`, `JsonEnumName`, `JsonKey`, `JsonOrder`, `JsonSkip`, `JsonMandatory`, `JsonOptIn`, `JsonOverflow`, `JsonCreator`. The single-purpose member attributes are shorthands for `[JsonMember]` settings; when both are on a member, `[JsonMember]`'s explicit values win (`[JsonMember(Ignore = false)]` keeps a `[JsonSkip]` member).
 
 ### 4.4 Migration from System.Text.Json attributes
 
-When the generator finds these attributes by metadata name, it honors them, with no package dependency: `JsonPropertyName`, `JsonPropertyOrder`, `JsonIgnore` (`Always` ignores; `WhenWritingDefault` / `WhenWritingNull` map to `DefaultValues` / `NullValues = Omit`), `JsonRequired`, `JsonInclude`, `JsonExtensionData`, `JsonConstructor` and `JsonStringEnumMemberName`. If a `[JsonMember]` is present on the same member, it wins. A type can therefore keep its System.Text.Json attributes during a migration; it can even keep `[JsonModel]` alongside `[JsonModel]` (§7.7).
+System.Text.Json's attributes aren't read (since 10.3). Each has an equivalent: `JsonPropertyName` → `JsonKey`, `JsonPropertyOrder` → `JsonOrder`, `JsonIgnore` → `JsonSkip` (`WhenWritingNull` / `WhenWritingDefault` → `WhenNull` / `WhenDefault`), `JsonRequired` → `JsonMandatory`, `JsonInclude` → `JsonOptIn`, `JsonExtensionData` → `JsonOverflow`, `JsonConstructor` → `JsonCreator`, `JsonStringEnumMemberName` → `JsonEnumName`, `JsonDerivedType` / `JsonPolymorphic` → `JsonDerived` / `Discriminator`, `JsonConverter` → `[JsonMember(Converter = ...)]`.
 
 ---
 
@@ -288,7 +299,7 @@ All are written as JSON strings.
 ### 5.4 Documented round-trip exceptions
 
 - **`DateTime` with `Kind = Local`.** Under `ConvertToUtc`, it reads back as the same instant with `Kind = Utc`. Under `WriteOffset`, the output depends on the machine's time zone, which breaks I1. Use `DateTimeOffset` instead.
-- **NaN payloads.** All NaNs are written as `"NaN"`, and only under `AsString`.
+- **NaN payloads.** All NaNs are written as `"NaN"` (under the default `AsString`) and read back as `double.NaN` / `float.NaN` / `Half.NaN`.
 - **Reference identity.** Two members that point at the same object are read back as two separate objects.
 - **`UnorderedCollections = Enumeration`.** I1 holds only as far as the BCL keeps enumeration order stable.
 
@@ -330,7 +341,7 @@ The rules that keep the result graph tight:
 
 ### 7.1 Interface
 
-The interface is named `IJsonSerializable<TSelf>` rather than `IJsonModel<TSelf>`, so it never gets confused with the `[JsonModel]` part's `IJsonModel<TSelf>`, which a type can implement at the same time (decision D6).
+The interface is named `IJsonSerializable<TSelf>` rather than `IJsonModel<TSelf>` (decision D6), which `Jakar.Extensions` used for its System.Text.Json models.
 
 ```csharp
 public interface IJsonSerializable<TSelf> : ISpanFormattable, IUtf8SpanFormattable, ISpanParsable<TSelf>, IUtf8SpanParsable<TSelf>
@@ -349,7 +360,7 @@ public interface IJsonSerializable<TSelf> : ISpanFormattable, IUtf8SpanFormattab
 
 Every other API is built on these two methods. The generator emits it on the type itself, because static-virtual defaults can't be reached through the concrete type name (the same reason as for `[JsonModel]`). The generator skips any method you've already written; see JJSON007.
 
-### 7.2 What `[JsonModel]` emits (Jakar.Json only; §7.7 for context-backed types)
+### 7.2 What `[JsonModel]` emits
 
 - The core:
   - `WriteJson<TWriter>`
@@ -461,7 +472,7 @@ With `NameMatching = OrdinalIgnoreCase`, the comparisons become `MemoryExtension
 | Sequences | `T[]` (incl. `byte[]`, as numbers), `List<T>`, `IList<T>`, `IReadOnlyList<T>`, `ICollection<T>`, `IReadOnlyCollection<T>`, `IEnumerable<T>` (read as `List<T>`), `ImmutableArray<T>`, `ImmutableList<T>`, `HashSet<T>` / `ISet<T>` / `IReadOnlySet<T>`, `FrozenSet<T>`, `SortedSet<T>`, `Queue<T>`, `Stack<T>` (written top first, read back in order) | array |
 | Maps | `Dictionary<K,V>`, `IDictionary`, `IReadOnlyDictionary`, `SortedDictionary`, `OrderedDictionary<K,V>`, `ImmutableDictionary`, `FrozenDictionary`, `ConcurrentDictionary`. Keys: `string`, enums, or any `ISpanFormattable + ISpanParsable` | object |
 | Self-describing collections | any type implementing `IJsonCollection<TSelf, T>`: it writes its own elements and is built from a span in one call (e.g. `Jakar.Extensions`' observable collections, which write their unfiltered contents and fill themselves with one bulk insert) | array |
-| Dynamic | `JNode` and its subtypes; System.Text.Json's `JsonElement` (`JsonElementConverter`: numbers kept verbatim) | any |
+| Dynamic | `JNode` and its subtypes (numbers kept verbatim) | any |
 | Custom | `[JsonMember(Converter = typeof(C))]` where `C : IJsonConverter<T>` | any |
 
 ```csharp
@@ -478,12 +489,12 @@ Reference types are non-nullable unless annotated: a non-nullable member rejects
 
 **Construction.** The generator picks the constructor in this order:
 
-1. The constructor marked `[JsonConstructor]`.
+1. The constructor marked `[JsonCreator]`.
 2. The primary constructor.
 3. The single public constructor.
 4. The parameterless constructor.
 
-Constructor parameters bind to members by name, ignoring case; a parameter with a default keeps it when the member is missing. `required` members go in an object initializer (they're always present: a missing one already failed). Every other member is assigned only when it was present in the JSON, so property initializers survive a missing member: settable members directly, init-only members through `[UnsafeAccessor]`, which binds at compile time with no reflection. Getter-only members that aren't constructor parameters are write-only: they're read (validated) and discarded, and JJSON011 is reported at info level.
+Constructor parameters bind to members by name, ignoring case; a parameter with a default keeps it when the member is missing. `required` members go in an object initializer (they're always present: a missing one already failed). Every other member is assigned only when it was present in the JSON, so property initializers survive a missing member: settable members directly, init-only members through `[UnsafeAccessor]`, which binds at compile time with no reflection. Getter-only members that aren't constructor parameters are write-only: they're read (validated) and discarded, and JJSON011 is reported at info level. `ReadOnlyMembers = Ignore` (on the type, the assembly, or `[JsonMember(ReadOnly = ...)]` per member) leaves them out instead: not written, and skipped like any unknown member when read.
 
 **Structs.** `WriteJson` takes the value as `scoped in T`, so large structs aren't copied. `ref struct` models are not supported.
 
@@ -505,56 +516,11 @@ public abstract partial class Animal { public string Name { get; init; } = ""; }
 
 ### 7.6 Extension data
 
-`[JsonMember(ExtensionData = true)]` (or STJ's `[JsonExtensionData]`) marks an `OrderedDictionary<string, JNode?>?`, a `JObjectNode?`, or a `Dictionary<string, JsonElement>?` member. The last is System.Text.Json's shape (`IJsonModel.AdditionalData`), so a type shared with `[JsonModel]` keeps one bag that both serializers fill. Its presence implies `UnknownMembers = Capture` (an explicit `UnknownMembers = Error` is JJSON008). Unknown members are read into it in input order, as `JNode`s; when writing, they're written after the declared members, in insertion order.
+`[JsonOverflow]` (or `[JsonMember(ExtensionData = true)]`) marks an `OrderedDictionary<string, JNode?>?` or a `JObjectNode?` member. It may be settable or init-only (the bag is created only when there's something to capture), or get-only with an instance the type creates (captured members are added to it). Its presence implies `UnknownMembers = Capture` (an explicit `UnknownMembers = Error` is JJSON008). Unknown members are read into it in input order, as `JNode`s; when writing, they're written after the declared members, in insertion order.
 
-### 7.7 `[JsonModel]`: one attribute, a mode per type
+### 7.7 `[JsonModel]` and System.Text.Json
 
-`[JsonModel]` is the only attribute (`Jakar.Extensions.JsonModelAttribute`, deriving from `JsonSettingsAttribute`, so it takes every setting in §4.2 plus `Discriminator` and `Implementation`). What it implements depends on whether the type has a System.Text.Json context (decision D8):
-
-| The type | Mode | Implements |
-|---|---|---|
-| `[JsonModel]`, no context (and no `[assembly: JsonModelContext]`) | **Jakar.Json only** | `IJsonSerializable<T>` with its helpers (§7.2, §8). No System.Text.Json involved. |
-| `[JsonModel(typeof(Ctx))]` that Jakar.Json supports | **Hybrid** | `IJsonModel<T>`: `JsonTypeInfo` is the context's; `FromJson` / `TryFromJson` / `FromJsonAsync` and `ToJson()` / `ToUtf8Json()` / `WriteToAsync()` run on Jakar.Json, calling `JsonCodec`. Also `IJsonSerializable<T>` (`TryFormat`, `Parse`, ...). |
-| `[JsonModel(typeof(Ctx))]` that Jakar.Json can't match | **System.Text.Json** (JJSON016, Info) | `IJsonModel<T>` on its metadata, as before. |
-| `Implementation = SystemTextJson` | System.Text.Json | Forced (a benchmark baseline, or an escape hatch). |
-| `Implementation = JakarJson` | Hybrid, or JJSON017 | What would fall back is an error instead. |
-
-**Why hybrid.** Per `IJsonModel` member, on the same model (§12.1): Jakar.Json writes 7–40% faster (allocation-free into a caller's buffer) and reads from strings at parity or faster, allocating less throughout. The exception is UTF-8 reads, where System.Text.Json is 5–13% faster on time while Jakar.Json allocates 6–57% less; hybrid still uses Jakar.Json there (one implementation per type, and the memory saving), and the UTF-8 reader is the open performance item. Routing through `IJsonModel` costs about the same as calling Jakar.Json directly. `JsonTypeInfo`, `ToJsonNode()`, `ToJsonElement()` and `WriteTo(Utf8JsonWriter)` are System.Text.Json by nature and stay so.
-
-**How.** `IJsonModel<TSelf>` has `static virtual SerializeJson` / `SerializeJsonUtf8` / `SerializeJsonAsync` (System.Text.Json by default), which the `ToJson()` / `ToUtf8Json()` / `WriteToAsync()` extensions call; a hybrid type implements them explicitly with Jakar.Json, and its `FromJson` family calls `JsonCodec`. The contract stays System.Text.Json's: Jakar.Json's `JsonReadException` *is* a `JsonException` (with `Path`, zero-based `LineNumber` / `BytePositionInLine`, and Jakar.Json's `Error`), so existing `catch (JsonException)` code keeps working and nothing is translated or rethrown.
-
-**Mirrored options.** The context's `[JsonSourceGenerationOptions]` become a settings layer between the type's own settings and the assembly's (member → type → **context** → `[assembly: JsonDefaults]` → built-in), so both serializers' JSON means the same and each reads the other's:
-
-| `JsonSourceGenerationOptions` | Jakar.Json |
-|---|---|
-| defaults (`General`) / `Web` | names as declared / camelCase; exact / case-insensitive names; numbers from strings off / on |
-| `WriteIndented`, `IndentCharacter`, `IndentSize` | `Indented`, `IndentChar`, `IndentSize` (System.Text.Json's default: two spaces) |
-| `PropertyNamingPolicy`, `PropertyNameCaseInsensitive` | `Naming`, `NameMatching` |
-| `DefaultIgnoreCondition` (`WhenWritingNull` / `WhenWritingDefault`) | `NullValues` / `DefaultValues = Omit` |
-| `NumberHandling` (`AllowReadingFromString`, `AllowNamedFloatingPointLiterals`) | `NumbersFromStrings`, `NonFiniteFloats = AsString` |
-| `ReadCommentHandling`, `AllowTrailingCommas`, `MaxDepth`, `AllowDuplicateProperties` | `AllowComments`, `AllowTrailingCommas`, `MaxDepth`, `DuplicateMembers` |
-| `UseStringEnumConverter` (or `JsonStringEnumConverter` in `Converters`) | `Enums = Name` (else `Number`); either reads both forms |
-| `UnmappedMemberHandling.Disallow` | `UnknownMembers = Error` |
-| `IncludeFields` | fields only when set (or `[JsonInclude]`) |
-| `RespectRequiredConstructorParameters` (default off) | a missing constructor parameter is its default, not an error |
-| — | `ToString()` isn't overridden unless `GenerateToString = On` (System.Text.Json never overrides it) |
-
-What layout can't express stays different: Jakar.Json writes `"name" : value` and escapes minimally; System.Text.Json writes `"name": value` and escapes non-ASCII and HTML characters. The values are the same, so this matters only to code comparing JSON text.
-
-**What makes a type fall back** (the reason is in JJSON016): anything Jakar.Json can't read or write (JJSON003 and friends, now reported as the reason instead of as errors); a member, or a member's type, with System.Text.Json's `[JsonConverter]`, `[JsonNumberHandling]` or `[JsonObjectCreationHandling]` (except `SerializeAsStringJsonConverter<T>` on an `ISpanFormattable` + `ISpanParsable` type: that's exactly Jakar.Json's format); `[JsonPolymorphic]` / `[JsonDerivedType]` / `[JsonConverter]` on the type; a context converter for a member's type (except collections that implement `IJsonCollection`); `DictionaryKeyPolicy`, `IgnoreReadOnlyProperties` / `Fields`, `NumberHandling.WriteAsString`, `PreferredObjectCreationHandling.Populate`, or a converter factory. A member whose `[JsonModel]` type falls back makes its owner fall back too (the check is transitive and cycle-safe).
-
-```csharp
-[JsonModel(typeof(AppJsonContext))]          // hybrid when Jakar.Json supports it
-public sealed partial class Invoice { ... }
-
-Invoice a = Invoice.FromJson(json);          // Jakar.Json (JsonException on failure)
-string  b = invoice.ToJson();                // Jakar.Json, laid out like the context
-string  c = JsonSerializer.Serialize(invoice, Invoice.JsonTypeInfo); // System.Text.Json
-Invoice d = Invoice.Parse(json, null);       // Jakar.Json (ISpanParsable)
-
-[JsonModel]                                  // no context: Jakar.Json only
-public sealed partial record Point( int X, int Y );
-```
+Until 10.2, a `[JsonModel]` given a `JsonSerializerContext` implemented `IJsonModel<TSelf>`, on Jakar.Json when it could and System.Text.Json otherwise (decision D8). 10.3 removed that mode with the rest of the System.Text.Json support (decision D10): `[JsonModel]` takes no context, and every type it accepts is implemented by Jakar.Json alone. JJSON016 and JJSON017 are retired.
 
 ---
 
@@ -623,11 +589,11 @@ public enum JsonErrorKind : byte { None, UnexpectedEnd, UnexpectedToken, Invalid
 
 public readonly record struct JsonError( JsonErrorKind Kind, int Position, int Line, int Column );   // no references; line/column computed on failure only
 
-public sealed class JsonReadException  : System.Text.Json.JsonException { public JsonError Error { get; } public new string Path { get; } }   // Path: "$.lines[3].price"
+public sealed class JsonReadException  : Exception { public JsonError Error { get; } public string Path { get; } public long LineNumber { get; } public long BytePositionInLine { get; } }   // Path: "$.lines[3].price"
 public sealed class JsonWriteException : InvalidOperationException { public JsonError Error { get; } }
 ```
 
-`JsonReadException` derives from System.Text.Json's `JsonException` (decision D9), so `catch (JsonException)` code works whichever serializer read the JSON: a `[JsonModel]` type's `IJsonModel` members may run on either (§7.7). Its `LineNumber` and `BytePositionInLine` are zero-based, as System.Text.Json reports them; `Error` keeps Jakar.Json's kind and one-based position. It's therefore not a `FormatException`, which `ISpanParsable.Parse` callers conventionally catch. Positions are char offsets for UTF-16 input and byte offsets for UTF-8; NDJSON errors report the stream offset and the line number (§8.2).
+`JsonReadException` derives from `Exception` (until 10.2 it was a System.Text.Json `JsonException`, decision D9; the Jakar.Json.SystemTextJson converter now translates it). Its `LineNumber` and `BytePositionInLine` are zero-based; `Error` keeps the kind and one-based position. It's not a `FormatException`, which `ISpanParsable.Parse` callers conventionally catch. Positions are char offsets for UTF-16 input and byte offsets for UTF-8; NDJSON errors report the stream offset and the line number (§8.2).
 
 ---
 
@@ -1681,7 +1647,7 @@ JNode   lines = order["lines"]!.Detach();              // removed from order; or
 - **Numbers.**
   - Parsed numbers keep their exact text, so `1.10` stays `1.10`. `JValueNode.FromNumberText` does the same for numbers from code, after checking them against the JSON grammar.
   - Numbers created from CLR values are stored as typed bits, so there's no string. They are written with the writer's canonical formatting (§5.2).
-  - NaN and ±Infinity are rejected when the node is constructed.
+  - NaN and ±Infinity are kept in float and double nodes and written as the strings `"NaN"`, `"Infinity"`, `"-Infinity"`; `GetDouble()` / `GetSingle()` read those strings back. Two NaN nodes are `DeepEquals`.
 - **Conversions.**
   - Implicit conversions to a node exist for CLR primitives, `string`, `Guid` and the date and time types. Dates are stored as their canonical §5.3 strings, and a local `DateTime` is converted to UTC.
   - Explicit conversions back throw `InvalidCastException` for `null` or a kind mismatch. The nullable versions return `null` for `null`.
@@ -2582,11 +2548,6 @@ public sealed class JValueNode : JNode
                    : value;
     }
 
-    private static T Finite<T>( T value )
-        where T : IFloatingPointIeee754<T> => T.IsFinite(value)
-                                                  ? value
-                                                  : throw new ArgumentOutOfRangeException(nameof(value), value, "JSON has no NaN or Infinity; store a string instead.");
-
     /// <summary> Invariant text of a typed number (round-trippable for floats). 64 chars fit every typed number. </summary>
     private int FormatNumber( Span<char> destination )
     {
@@ -3154,10 +3115,9 @@ The prefix is `JJSON`, distinct from the `[JsonModel]` part's `JAKAR_JSON`. IDs 
 | JJSON013 | Warning | `UnorderedCollections = Enumeration` or `LocalDateTimes = WriteOffset`: I1 is weakened (§5.4). | — |
 | JJSON014 | Error | The `[JsonDerived]` tag is duplicated, or the derived type doesn't derive from the base. | — |
 | JJSON015 | Error | An `IJsonSerializable<T>` is listed without `[JsonModel]` and isn't implemented. | add `[JsonModel]` |
-| JJSON016 | Info | A context-backed `[JsonModel]` uses System.Text.Json because Jakar.Json can't match it; the message has the reason (§7.7). | fix the reason, or `Implementation = SystemTextJson` to say it's intended |
-| JJSON017 | Error | `Implementation = JakarJson`, but the type would fall back. | fix the reason, or use `Auto` |
+| JJSON016, JJSON017 | — | Retired in 10.3 with System.Text.Json contexts (§7.7). | — |
 
-The generator follows the existing incremental-pipeline rules. Pipeline models hold no `ISymbol`, `SyntaxNode` or `Compilation`, and are compared by value (`EquatableArray<T>`, `record` models). The pipeline uses one `ForAttributeWithMetadataName("Jakar.Extensions.JsonModelAttribute")` that extracts both views of each type (Jakar.Json's model and `IJsonModel`'s), combined with `CompilationProvider.Select` for `[assembly: JsonDefaults]` and `[assembly: JsonModelContext]`, and the collected `[JsonSerializable]` contexts. Each type gets `{T}.Json.g.cs` (Jakar.Json), `{T}.JsonModel.g.cs` (`IJsonModel`), or both (hybrid), as its mode says (§7.7). There's also one shared file per assembly for enum codecs: each enum gets its codec emitted once per assembly, wherever it's used.
+The generator follows the existing incremental-pipeline rules. Pipeline models hold no `ISymbol`, `SyntaxNode` or `Compilation`, and are compared by value (`EquatableArray<T>`, `record` models). The pipeline uses one `ForAttributeWithMetadataName("Jakar.Extensions.JsonModelAttribute")`, combined with `CompilationProvider.Select` for `[assembly: JsonDefaults]`. Each type gets `{T}.Json.g.cs`. There's also one shared file per assembly for enum codecs: each enum gets its codec emitted once per assembly, wherever it's used.
 
 ---
 
@@ -3179,7 +3139,7 @@ BenchmarkDotNet 0.15.8, default job (13–73 iterations; error ≤ 2%), in-proce
 
 **Jakar.Json is the baseline (1.00)**: a context-less `[JsonModel]` for the serializer rows, `JsonTape` / `JNode` for the dynamic ones. Each cell is time relative to it at ≈ 200 B / 10 KB / 1 MB; above 1.00 is slower than Jakar.Json.
 
-| Operation | `[JsonModel]` hybrid (§7.7) | System.Text.Json (source-generated) | Newtonsoft.Json | Jakar.Json allocates |
+| Operation | `[JsonModel]` hybrid (retired in 10.3, §7.7) | System.Text.Json (source-generated) | Newtonsoft.Json | Jakar.Json allocates |
 |---|---|---|---|---|
 | Serialize to `string` | 1.01 / 1.11 / 1.07 | 1.63 / 1.88 / 1.93 | 4.43 / 4.34 / 4.22 | 93–105% of STJ (the string) |
 | … into a caller `char` buffer (`TryFormat`) | — | — | — | **0 B** (0.83–1.01 of the `string` row) |
@@ -3194,7 +3154,7 @@ BenchmarkDotNet 0.15.8, default job (13–73 iterations; error ≤ 2%), in-proce
 **Reading the table.**
 
 - **Against System.Text.Json**, Jakar.Json is faster on every path at every size: 18–93% on writes, 23–52% on reads, 30–36% for `JsonTape` against `JsonDocument`, and 8–21% for `JNode` against `JsonNode`. It allocates the same or less everywhere except the ≈ 200 B DOM row (4% more; `JNode` builds every node up front, where `JsonNode` decodes values only when they're read).
-- **Hybrid** (`IJsonModel` members on Jakar.Json, what context-backed `[JsonModel]` types use) costs about the same as plain Jakar.Json, within 0.92–1.16, and allocates the same, which is the basis of decision D8. The extra static-virtual dispatch shows on small documents (≈ 200 B stream and UTF-8 writes, 6–16%), and it's still faster than System.Text.Json in every row.
+- **Hybrid** (`IJsonModel` members on Jakar.Json, what context-backed `[JsonModel]` types used until 10.2) cost about the same as plain Jakar.Json, within 0.92–1.16, and allocates the same, which is the basis of decision D8. The extra static-virtual dispatch shows on small documents (≈ 200 B stream and UTF-8 writes, 6–16%), and it's still faster than System.Text.Json in every row.
 - **Writes** are allocation-free into a caller's buffer. Stream writes buffer on the stack first, so small documents reach the stream in one write.
 - **Reads**: UTF-8 reads are now 23–36% faster than System.Text.Json (they were 5–13% slower). Jakar.Json's own UTF-8 reads are still a little slower than its string reads (32.8 µs vs 30.5 µs at 10 KB): UTF-8 names and strings are transcoded where UTF-16 input is sliced.
 - **Newtonsoft** is 2–6× slower than Jakar.Json throughout and allocates up to 72,000× more on stream writes.
@@ -3234,4 +3194,5 @@ Resolved 10/07/2026. These were the open questions of the first draft.
 | D6 | Name clash between this package's `IJsonModel<T>` and the `[JsonModel]` one (then `Jakar.SystemTextJson`). | Rename this package's interface to `IJsonSerializable<T>` (§7.1). |
 | D7 | Two packages and two generators (`Jakar.SystemTextJson` for `[JsonModel]`, `Jakar.Json` for `[JsonModel]`) for one job, with types that need both. | Merge `Jakar.SystemTextJson` into `Jakar.Json`: one package, one generator with a part per attribute, one analyzer and code-fix assembly. Its types keep the `Jakar.Extensions` namespace and `JAKAR_JSON` IDs, so no source changes. `Jakar.Json` gains `IJsonCollection<TSelf, T>`, `JsonElementConverter` and `Dictionary<string, JsonElement>` extension data so models shared with System.Text.Json (the `Jakar.Extensions` user models) work in both; init-only members of closed generic bases bind through the open definition (`[UnsafeAccessor]` can't target a closed generic type). |
 | D8 | Two attributes for one type (`[GenerateJson]` for Jakar.Json, `[JsonModel]` for `IJsonModel`), and `IJsonModel` always on System.Text.Json even where Jakar.Json is faster. | One attribute: `[JsonModel]` takes Jakar.Json's settings and picks a mode per type (§7.7): no context → Jakar.Json only; a context → `IJsonModel` implemented by Jakar.Json when it supports the type (benchmarks: faster or equal on time + memory for every member), System.Text.Json otherwise (JJSON016). The context's options are mirrored so the JSON means the same. `[GenerateJson]` and JJSON010 are removed; it's the default generator for `Jakar.Extensions`. |
-| D9 | `IJsonModel` promises `JsonException`, Jakar.Json threw `JsonReadException : FormatException`, so hybrid models translated one into the other (a second throw per failure, and overloads that disagreed). | `JsonReadException : JsonException`: one exception for both contracts, thrown once, from every overload; nothing translates. Cost: it's no longer a `FormatException` (`ISpanParsable.Parse`'s conventional type). |
+| D9 | `IJsonModel` promised `JsonException`, Jakar.Json threw `JsonReadException : FormatException`, so hybrid models translated one into the other (a second throw per failure, and overloads that disagreed). | `JsonReadException : JsonException`: one exception for both contracts, thrown once, from every overload; nothing translates. Cost: it's no longer a `FormatException` (`ISpanParsable.Parse`'s conventional type). |
+| D10 | Jakar.Json should be a standalone serializer, with no System.Text.Json in it. | 10.3 removes the System.Text.Json models (D7), the context mode (D8) and `JsonReadException : JsonException` (D9): `[JsonModel]` is Jakar.Json only, its errors derive from `Exception`, and System.Text.Json attributes aren't read. What they covered has Jakar.Json equivalents: `[JsonKey]`, `[JsonOrder]`, `[JsonSkip]`, `[JsonMandatory]`, `[JsonOptIn]`, `[JsonOverflow]` (extension data as `JNode`s), `[JsonCreator]`, `ReadOnlyMembers` for computed members, and non-finite floats as strings by default. Hosts built on System.Text.Json keep their bridge packages (`Jakar.Json.SystemTextJson`, which translates errors to `JsonException`). |

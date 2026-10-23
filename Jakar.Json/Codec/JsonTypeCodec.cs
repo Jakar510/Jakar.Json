@@ -60,6 +60,14 @@ public abstract class JsonTypeCodec
     public abstract void Write<TWriter>( object? value, ref TWriter output, JsonWriterOptions? options = null )
         where TWriter : IBufferWriter<byte>, allows ref struct;
 
+    /// <summary>
+    ///     Writes <paramref name="value"/> (a <see cref="Type"/>, or <see langword="null"/>) as one JSON value into a writer that's already producing a document: a member's value or an
+    ///     array element, laid out and escaped by <paramref name="writer"/>'s options. Either encoding.
+    /// </summary>
+    /// <exception cref="ArgumentException"> <paramref name="value"/> isn't a <see cref="Type"/>. </exception>
+    public abstract void WriteValue<TJsonWriter>( object? value, ref TJsonWriter writer )
+        where TJsonWriter : IJsonWriter, allows ref struct;
+
 
     /// <summary> The codec for a sequence of this type (<see cref="Type"/> is the element type). </summary>
     internal abstract JsonTypeCodec CreateSequence( Type sequenceType, bool asArray );
@@ -95,6 +103,22 @@ internal sealed class JsonModelCodec<T>() : JsonTypeCodec(typeof(T))
 
             case T model:
                 JsonCodec.WriteJson(in model, ref output, options);
+                return;
+
+            default: throw NotThisType(value);
+        }
+    }
+
+    public override void WriteValue<TJsonWriter>( object? value, ref TJsonWriter writer )
+    {
+        switch ( value )
+        {
+            case null:
+                writer.WriteNull();
+                return;
+
+            case T model:
+                T.WriteJson(ref writer, in model);
                 return;
 
             default: throw NotThisType(value);
@@ -147,6 +171,30 @@ internal sealed class JsonSequenceCodec<T>( Type sequenceType, bool asArray ) : 
         }
     }
 
+    public override void WriteValue<TJsonWriter>( object? value, ref TJsonWriter writer )
+    {
+        if ( value is null )
+        {
+            writer.WriteNull();
+            return;
+        }
+
+        if ( value is not IEnumerable<T> values ) { throw NotThisType(value); }
+
+        writer.WriteStartArray();
+
+        if ( value is List<T> list )
+        {
+            foreach ( T item in CollectionsMarshal.AsSpan(list) ) { T.WriteJson(ref writer, in item); }
+        }
+        else
+        {
+            foreach ( T item in values ) { T.WriteJson(ref writer, in item); }
+        }
+
+        writer.WriteEndArray();
+    }
+
     internal override JsonTypeCodec CreateSequence( Type type, bool array ) => throw new NotSupportedException("Nested sequences of models aren't resolved at run time; wrap them in a [JsonModel] type.");
 }
 
@@ -174,6 +222,12 @@ public static class JsonCodecRegistry
 
 
     public static bool IsRegistered( Type type ) => TryGet(type, out _);
+
+    /// <summary>
+    ///     The <c>[JsonModel]</c> types registered so far (not the collections resolved from them). When an assembly is loaded more than once (test runners, plugin hosts), these are the
+    ///     copies the app runs: resolve a stored type name against their assemblies to get the type the app uses.
+    /// </summary>
+    public static ICollection<Type> RegisteredTypes => __models.Keys;
 
 
     /// <summary> The codec for <paramref name="type"/>: a registered model, or a supported collection of one. </summary>

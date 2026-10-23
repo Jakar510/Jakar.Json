@@ -20,21 +20,14 @@ namespace Jakar.Json.Generator;
 
 internal static class ModelExtractor
 {
-    private const string STJ = "System.Text.Json.Serialization.";
+    private const string J = "Jakar.Json.";
 
 
     public static ModelInfo Extract( GeneratorAttributeSyntaxContext ctx, CancellationToken token ) => Build((INamedTypeSymbol)ctx.TargetSymbol, ctx.Attributes[0], new KnownTypes(ctx.SemanticModel.Compilation, token));
 
 
-    /// <summary>
-    ///     Whether Jakar.Json will implement a <c>[JsonModel]</c> type of this compilation (it isn't <c>Implementation = SystemTextJson</c> and nothing makes it fall back):
-    ///     a member of that type is then a Jakar.Json model. Leaves <see cref="KnownTypes.Mirror"/> set to the type's own context; the caller restores its own.
-    /// </summary>
-    public static bool IsJakarCapable( INamedTypeSymbol symbol, AttributeData attribute, KnownTypes known )
-    {
-        ModelInfo model = Build(symbol, attribute, known);
-        return model.Implementation != Values.IMPLEMENTATION_STJ && Emitter.CanEmit(model, known.Defaults, out _);
-    }
+    /// <summary> Whether the generator will implement a <c>[JsonModel]</c> type of this compilation (nothing stops it): a member of that type is then a model. </summary>
+    public static bool IsCapable( INamedTypeSymbol symbol, AttributeData attribute, KnownTypes known ) => Emitter.CanEmit(Build(symbol, attribute, known), known.Defaults, out _);
 
 
     private static ModelInfo Build( INamedTypeSymbol symbol, AttributeData attribute, KnownTypes known )
@@ -57,61 +50,13 @@ internal static class ModelExtractor
             break;
         }
 
-        // ─── Context: [JsonModel(typeof(Ctx))], or [assembly: JsonModelContext(typeof(Ctx))] ────
-        // With one, the type implements IJsonModel<TSelf> and mirrors the context's options; without one it's Jakar.Json only.
-        INamedTypeSymbol? context          = null;
-        bool              contextRequested = false;
-
-        if ( attribute.ConstructorArguments.Length == 1 )
-        {
-            contextRequested = true;
-            context          = attribute.ConstructorArguments[0].Value as INamedTypeSymbol;
-        }
-        else if ( known.Compilation.Assembly.GetAttributes().FirstOrDefault(static a => a.AttributeClass is not null && TypeShapes.MetadataName(a.AttributeClass) == SystemTextJson.JsonModelGenerator.JSON_MODEL_CONTEXT_ATTRIBUTE) is { } assemblyDefault )
-        {
-            contextRequested = true;
-            context          = assemblyDefault.ConstructorArguments.FirstOrDefault().Value as INamedTypeSymbol;
-        }
-
-        int implementation = attribute.NamedArguments.FirstOrDefault(static a => a.Key == "Implementation").Value.Value is { } raw
-                                 ? System.Convert.ToInt32(raw, CultureInfo.InvariantCulture)
-                                 : Values.IMPLEMENTATION_AUTO;
-
-        known.Mirror = contextRequested && context is not null && SystemTextJson.ModelExtractor.DerivesFrom(context, SystemTextJson.JsonModelGenerator.JSON_SERIALIZER_CONTEXT)
-                           ? ContextMirror.Read(context)
-                           : ContextMirror.None;
-
-        if ( known.Mirror.IsActive )
-        {
-            if ( known.Mirror.Blocker is { } blocker )
-            {
-                diagnostics.Add(DiagnosticInfo.Create(JsonDiagnostics.Contradictory, attributeLocation, $"'{displayName}': {blocker}"));
-                fatal = true;
-            }
-
-            // System.Text.Json features on the type itself that Jakar.Json doesn't implement the same way.
-            foreach ( AttributeData stj in symbol.GetAttributes() )
-            {
-                string? name = stj.AttributeClass is null
-                                   ? null
-                                   : TypeShapes.MetadataName(stj.AttributeClass);
-
-                if ( name is STJ + "JsonPolymorphicAttribute" or STJ + "JsonDerivedTypeAttribute" or STJ + "JsonConverterAttribute" or STJ + "JsonNumberHandlingAttribute" or STJ + "JsonUnmappedMemberHandlingAttribute" or STJ + "JsonObjectCreationHandlingAttribute" )
-                {
-                    diagnostics.Add(DiagnosticInfo.Create(JsonDiagnostics.Contradictory, attributeLocation, $"'{displayName}' has System.Text.Json's [{stj.AttributeClass!.Name.Replace("Attribute", "")}], which Jakar.Json doesn't implement the same way"));
-                    fatal = true;
-                    break;
-                }
-            }
-        }
-
         if ( symbol.IsStatic || symbol.TypeKind is not (TypeKind.Class or TypeKind.Struct) || symbol.IsRefLikeType )
         {
             diagnostics.Add(DiagnosticInfo.Create(JsonDiagnostics.InvalidMemberType, attributeLocation, displayName, displayName, "only classes, structs and records can be [JsonModel] types"));
             fatal = true;
         }
 
-        Settings settings      = known.Mirror.Settings.With(Settings.From(attribute)); // the type's own settings win over its context's
+        Settings settings      = Settings.From(attribute);
         string   discriminator = attribute.NamedArguments.FirstOrDefault(static a => a.Key == "Discriminator").Value.Value as string ?? "$type";
 
         // ─── Members ─────────────────────────────────────────────────────────
@@ -122,13 +67,20 @@ internal static class ModelExtractor
                                             ? new ConstructionInfo(ConstructionKind.None, EquatableArray<ParameterInfo>.Empty, false)
                                             : ChooseConstructor(symbol, members, attributeLocation, diagnostics, ref fatal, token);
 
-        // Members bound to constructor parameters are read even without a setter; the rest need one.
-        HashSet<string> bound = new(construction.Parameters.Where(static p => p.Member is not null).Select(static p => p.Member!), StringComparer.Ordinal);
+        // Members bound to constructor parameters are read even without a setter; the rest need one. Those that can't be read back (computed properties) are written,
+        // or left out with ReadOnlyMembers = Ignore (on the member, the type, or the assembly).
+        HashSet<string> bound    = new(construction.Parameters.Where(static p => p.Member is not null).Select(static p => p.Member!), StringComparer.Ordinal);
+        Settings        resolved = known.Defaults.With(settings);
 
-        foreach ( MemberInfo member in members )
-        {
-            if ( member.Setter is SetterKind.None or SetterKind.ReadOnlyField && !bound.Contains(member.Name) && !member.IsExtensionData ) { diagnostics.Add(DiagnosticInfo.Create(JsonDiagnostics.NotRead, member.Location ?? attributeLocation, member.Name)); }
-        }
+        members.RemoveAll(member =>
+                          {
+                              if ( member.Setter is not (SetterKind.None or SetterKind.ReadOnlyField) || bound.Contains(member.Name) || member.IsExtensionData ) { return false; }
+
+                              if ( resolved.With(member.Settings).ReadOnlyMembers == Values.READ_ONLY_IGNORE ) { return true; }
+
+                              diagnostics.Add(DiagnosticInfo.Create(JsonDiagnostics.NotRead, member.Location ?? attributeLocation, member.Name));
+                              return false;
+                          });
 
         // JJSON006: members of one declaring type spread over several files, with no explicit order.
         foreach ( IGrouping<string, MemberInfo> group in members.GroupBy(static m => m.DeclaringType) )
@@ -176,9 +128,6 @@ internal static class ModelExtractor
                    HasSerializableBase = hasSerializableBase,
                    Skip                = new EquatableArray<string>(FindHandWritten(symbol, attributeLocation, diagnostics)),
                    OverridesToString   = OverridesToString(symbol),
-                   ContextRequested    = contextRequested,
-                   Implementation      = implementation,
-                   OptionalConstructorParameters = known.Mirror.IsActive && known.Mirror.OptionalConstructorParameters,
                    AttributeLocation   = attributeLocation,
                    Diagnostics         = new EquatableArray<DiagnosticInfo>(diagnostics),
                    IsFatal             = fatal,
@@ -262,9 +211,6 @@ internal static class ModelExtractor
         Attributes attributes = Attributes.Read(field);
         if ( attributes.Ignore || !Included(field, attributes, own) ) { return null; }
 
-        // A mirrored context without IncludeFields serializes only the fields marked [JsonInclude] / [JsonPropertyName] / [JsonMember].
-        if ( !known.Mirror.IncludeFields && !attributes.Marked ) { return null; }
-
         SetterKind setter = field.IsReadOnly
                                 ? SetterKind.ReadOnlyField
                                 : SetterKind.Field;
@@ -272,7 +218,7 @@ internal static class ModelExtractor
         return Build(field, field.Type, true, setter, field.IsRequired, attributes, baseDepth, known, diagnostics, ref fatal);
     }
 
-    /// <summary> Public members, plus any member marked [JsonMember] / [JsonPropertyName] / [JsonInclude] that generated code can reach. </summary>
+    /// <summary> Public members, plus any member marked [JsonMember] / [JsonKey] / [JsonOptIn] / [JsonOverflow] that generated code can reach. </summary>
     private static bool Included( ISymbol member, in Attributes attributes, bool own )
     {
         if ( member.DeclaredAccessibility == Accessibility.Public ) { return true; }
@@ -296,16 +242,11 @@ internal static class ModelExtractor
             converter = ResolveConverter(attributes.Converter, type, known);
             if ( converter is null ) { diagnostics.Add(DiagnosticInfo.Create(JsonDiagnostics.InvalidConverter, info, attributes.Converter.ToDisplayString(), member.Name, TypeShapes.Name(type))); }
         }
-        else if ( known.Mirror.IsActive && attributes.StjOnly is { } stjOnly )
-        {
-            diagnostics.Add(DiagnosticInfo.Create(JsonDiagnostics.UnsupportedMember, info, member.Name, TypeShapes.Name(type), $"it has System.Text.Json's [{stjOnly}], which Jakar.Json doesn't implement the same way"));
-            fatal = true;
-        }
         else if ( attributes.ExtensionData )
         {
             if ( !IsExtensionDataType(type, known) )
             {
-                diagnostics.Add(DiagnosticInfo.Create(JsonDiagnostics.Contradictory, info, $"Extension data member '{member.Name}' must be an OrderedDictionary<string, JNode?>, a JObjectNode, or a Dictionary<string, JsonElement>"));
+                diagnostics.Add(DiagnosticInfo.Create(JsonDiagnostics.Contradictory, info, $"Extension data member '{member.Name}' must be an OrderedDictionary<string, JNode?>, or a JObjectNode"));
                 fatal = true;
             }
         }
@@ -334,7 +275,6 @@ internal static class ModelExtractor
                    RequiredAttribute    = attributes.Required,
                    Converter            = converter,
                    IsExtensionData      = attributes.ExtensionData,
-                   ExtensionElements    = attributes.ExtensionData && IsElementBag(type, known),
                    Settings             = attributes.Settings,
                    BaseDepth            = baseDepth,
                    FilePath             = location?.SourceTree?.FilePath ?? "",
@@ -392,22 +332,14 @@ internal static class ModelExtractor
         return new GenericAccessorInfo($"<{string.Join(", ", renamed.Values)}>", constraints.ToString(), Rename(definition.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)), $"<{string.Join(", ", declaring.TypeArguments.Select(static t => t.ToDisplayString(TypeShapes.Format)))}>", Rename(property.OriginalDefinition.Type.ToDisplayString(TypeShapes.Format)));
     }
 
-    private static bool IsExtensionDataType( ITypeSymbol type, KnownTypes known ) => IsJNodeBag(type, known) || IsElementBag(type, known);
-
     /// <summary> <c>JObjectNode</c> or <c>OrderedDictionary&lt;string, JNode?&gt;</c>. </summary>
-    private static bool IsJNodeBag( ITypeSymbol type, KnownTypes known )
+    private static bool IsExtensionDataType( ITypeSymbol type, KnownTypes known )
     {
         ITypeSymbol plain = type.WithNullableAnnotation(NullableAnnotation.None);
         if ( SymbolEqualityComparer.Default.Equals(plain, known.JObjectNode) ) { return true; }
 
         return plain is INamedTypeSymbol { IsGenericType: true } named && SymbolEqualityComparer.Default.Equals(named.OriginalDefinition, known.OrderedDictionary) && named.TypeArguments[0].SpecialType == SpecialType.System_String && SymbolEqualityComparer.Default.Equals(named.TypeArguments[1].WithNullableAnnotation(NullableAnnotation.None), known.JNode);
     }
-
-    /// <summary> <c>Dictionary&lt;string, JsonElement&gt;</c>: System.Text.Json's extension-data shape (<c>IJsonModel.AdditionalData</c>), so a type shared with it keeps one bag. </summary>
-    private static bool IsElementBag( ITypeSymbol type, KnownTypes known ) => type.WithNullableAnnotation(NullableAnnotation.None) is INamedTypeSymbol { IsGenericType: true } named &&
-                                                                              SymbolEqualityComparer.Default.Equals(named.OriginalDefinition, known.Dictionary) &&
-                                                                              named.TypeArguments[0].SpecialType == SpecialType.System_String                   &&
-                                                                              SymbolEqualityComparer.Default.Equals(named.TypeArguments[1], known.JsonElement);
 
     /// <summary> The converter expression for a member: the converter itself, or wrapped for <c>T?</c> when it converts <c>T</c>. <see langword="null"/> when it fits neither. </summary>
     private static string? ResolveConverter( INamedTypeSymbol converter, ITypeSymbol memberType, KnownTypes known )
@@ -423,7 +355,7 @@ internal static class ModelExtractor
 
 
 
-    /// <summary> The attributes Jakar.Json reads on a member: its own, plus System.Text.Json's for migration (SPEC.md §4.4). </summary>
+    /// <summary> The attributes Jakar.Json reads on a member: <c>[JsonMember]</c>, and the single-purpose ones (<c>[JsonKey]</c>, <c>[JsonSkip]</c>, ...) whose values it overrides (SPEC.md §4.4). </summary>
     private readonly struct Attributes
     {
         public bool              Ignore        { get; private init; }
@@ -435,14 +367,12 @@ internal static class ModelExtractor
         public INamedTypeSymbol? Converter     { get; private init; }
         public Settings          Settings      { get; private init; }
 
-        /// <summary> A System.Text.Json attribute Jakar.Json doesn't implement the same way ([JsonConverter], [JsonNumberHandling], [JsonObjectCreationHandling]), or <see langword="null"/>. </summary>
-        public string? StjOnly { get; private init; }
-
 
         public static Attributes Read( ISymbol member )
         {
-            Attributes result = default;
-            bool       ours   = false;
+            Attributes shorthand = default; // [JsonKey], [JsonOrder], [JsonSkip], [JsonMandatory], [JsonOptIn], [JsonOverflow]
+            Attributes explicit_ = default; // [JsonMember]'s named arguments
+            HashSet<string> named = new(StringComparer.Ordinal);
 
             foreach ( AttributeData attribute in member.GetAttributes() )
             {
@@ -453,92 +383,100 @@ internal static class ModelExtractor
                 switch ( name )
                 {
                     case JsonGenerator.JSON_MEMBER_ATTRIBUTE:
-                        ours = true;
-
-                        result = result with
-                                 {
-                                     Marked = true,
-                                     Settings = Settings.From(attribute)
-                                 };
+                        explicit_ = explicit_ with
+                                    {
+                                        Marked = true,
+                                        Settings = Settings.From(attribute)
+                                    };
 
                         foreach ( KeyValuePair<string, TypedConstant> argument in attribute.NamedArguments )
                         {
-                            result = argument.Key switch
-                                     {
-                                         "Name" => result with { Name = argument.Value.Value as string },
-                                         "Order" => result with
-                                                    {
-                                                        Order = argument.Value.Value is int order
-                                                                    ? order
-                                                                    : 0
-                                                    },
-                                         "Ignore"        => result with { Ignore = argument.Value.Value is true },
-                                         "Required"      => result with { Required = argument.Value.Value is true },
-                                         "ExtensionData" => result with { ExtensionData = argument.Value.Value is true },
-                                         "Converter"     => result with { Converter = argument.Value.Value as INamedTypeSymbol },
-                                         _               => result
-                                     };
+                            named.Add(argument.Key);
+
+                            explicit_ = argument.Key switch
+                                        {
+                                            "Name" => explicit_ with { Name = argument.Value.Value as string },
+                                            "Order" => explicit_ with
+                                                       {
+                                                           Order = argument.Value.Value is int order
+                                                                       ? order
+                                                                       : 0
+                                                       },
+                                            "Ignore"        => explicit_ with { Ignore = argument.Value.Value is true },
+                                            "Required"      => explicit_ with { Required = argument.Value.Value is true },
+                                            "ExtensionData" => explicit_ with { ExtensionData = argument.Value.Value is true },
+                                            "Converter"     => explicit_ with { Converter = argument.Value.Value as INamedTypeSymbol },
+                                            _               => explicit_
+                                        };
                         }
 
                         break;
 
-                    // System.Text.Json attributes: honored unless [JsonMember] says otherwise.
-                    case STJ + "JsonPropertyNameAttribute" when attribute.ConstructorArguments.Length == 1:
-                        result = result with
-                                 {
-                                     Marked = true,
-                                     Name = result.Name ?? attribute.ConstructorArguments[0].Value as string
-                                 };
+                    case J + "JsonKeyAttribute" when attribute.ConstructorArguments.Length == 1:
+                        shorthand = shorthand with
+                                    {
+                                        Marked = true,
+                                        Name = attribute.ConstructorArguments[0].Value as string
+                                    };
 
                         break;
 
-                    case STJ + "JsonPropertyOrderAttribute" when attribute.ConstructorArguments.Length == 1:
-                        result = result with { Order = result.Order ?? attribute.ConstructorArguments[0].Value as int? };
+                    case J + "JsonOrderAttribute" when attribute.ConstructorArguments.Length == 1:
+                        shorthand = shorthand with { Order = attribute.ConstructorArguments[0].Value as int? };
                         break;
 
-                    case STJ + "JsonRequiredAttribute":
-                        result = result with { Required = true };
+                    case J + "JsonMandatoryAttribute":
+                        shorthand = shorthand with { Required = true };
                         break;
 
-                    case STJ + "JsonExtensionDataAttribute":
-                        result = result with
-                                 {
-                                     Marked = true,
-                                     ExtensionData = true
-                                 };
+                    case J + "JsonOptInAttribute":
+                        shorthand = shorthand with { Marked = true };
+                        break;
+
+                    case J + "JsonOverflowAttribute":
+                        shorthand = shorthand with
+                                    {
+                                        Marked = true,
+                                        ExtensionData = true
+                                    };
 
                         break;
 
-                    case STJ + "JsonIncludeAttribute":
-                        result = result with { Marked = true };
-                        break;
+                    case J + "JsonSkipAttribute":
+                        // JsonSkipCondition: Always = 0, WhenNull = 1, WhenDefault = 2.
+                        int condition = attribute.NamedArguments.FirstOrDefault(static a => a.Key == "Condition").Value.Value is { } c
+                                            ? System.Convert.ToInt32(c, CultureInfo.InvariantCulture)
+                                            : 0;
 
-                    case STJ + "JsonConverterAttribute" or STJ + "JsonNumberHandlingAttribute" or STJ + "JsonObjectCreationHandlingAttribute":
-                        result = result with { StjOnly = attribute.AttributeClass!.Name.Replace("Attribute", "") };
-                        break;
-
-                    case STJ + "JsonIgnoreAttribute" when !ours:
-                        // JsonIgnoreCondition: Never = 0, Always = 1, WhenWritingDefault = 2, WhenWritingNull = 3.
-                        int condition = attribute.NamedArguments.FirstOrDefault(static a => a.Key == "Condition").Value.Value is int c
-                                            ? c
-                                            : 1;
-
-                        result = condition switch
-                                 {
-                                     1 => result with { Ignore = true },
-                                     2 => result with { Settings = result.Settings with { DefaultValues = Values.DEFAULTS_OMIT } },
-                                     3 => result with { Settings = result.Settings with { NullValues = Values.NULLS_OMIT } },
-                                     _ => result
-                                 };
+                        shorthand = condition switch
+                                    {
+                                        1 => shorthand with { Settings = shorthand.Settings with { NullValues = Values.NULLS_OMIT } },
+                                        2 => shorthand with { Settings = shorthand.Settings with { DefaultValues = Values.DEFAULTS_OMIT } },
+                                        _ => shorthand with { Ignore = true }
+                                    };
 
                         break;
                 }
             }
 
-            // [JsonMember(Ignore = false)] overrides an STJ [JsonIgnore]; [JsonMember(Ignore = true)] always wins.
-            if ( ours && !member.GetAttributes().Any(static a => a.AttributeClass is not null && TypeShapes.MetadataName(a.AttributeClass) == JsonGenerator.JSON_MEMBER_ATTRIBUTE && a.NamedArguments.Any(static n => n.Key == "Ignore" && n.Value.Value is true)) ) { result = result with { Ignore = false }; }
-
-            return result;
+            // [JsonMember]'s explicit values win: [JsonMember(Ignore = false)] keeps a member [JsonSkip] would leave out.
+            return new Attributes
+                   {
+                       Ignore = named.Contains("Ignore")
+                                    ? explicit_.Ignore
+                                    : shorthand.Ignore,
+                       Marked = explicit_.Marked || shorthand.Marked,
+                       Name   = explicit_.Name  ?? shorthand.Name,
+                       Order  = explicit_.Order ?? shorthand.Order,
+                       Required = named.Contains("Required")
+                                      ? explicit_.Required
+                                      : shorthand.Required,
+                       ExtensionData = named.Contains("ExtensionData")
+                                           ? explicit_.ExtensionData
+                                           : shorthand.ExtensionData,
+                       Converter = explicit_.Converter,
+                       Settings  = shorthand.Settings.With(explicit_.Settings)
+                   };
         }
     }
 
@@ -553,7 +491,7 @@ internal static class ModelExtractor
 
         bool IsCopyConstructor( IMethodSymbol ctor ) => isRecord && ctor.Parameters.Length == 1 && SymbolEqualityComparer.Default.Equals(ctor.Parameters[0].Type.WithNullableAnnotation(NullableAnnotation.None), symbol.WithNullableAnnotation(NullableAnnotation.None));
 
-        IMethodSymbol? chosen = constructors.FirstOrDefault(static c => c.GetAttributes().Any(static a => a.AttributeClass is not null && TypeShapes.MetadataName(a.AttributeClass) == STJ + "JsonConstructorAttribute"));
+        IMethodSymbol? chosen = constructors.FirstOrDefault(static c => c.GetAttributes().Any(static a => a.AttributeClass is not null && TypeShapes.MetadataName(a.AttributeClass) == J + "JsonCreatorAttribute"));
 
         // The primary constructor: declared by the type declaration itself.
         chosen ??= constructors.FirstOrDefault(c => !c.IsImplicitlyDeclared && c.DeclaringSyntaxReferences.Any(r => r.GetSyntax(token) is TypeDeclarationSyntax));
@@ -573,7 +511,7 @@ internal static class ModelExtractor
 
             if ( chosen is null )
             {
-                diagnostics.Add(DiagnosticInfo.Create(JsonDiagnostics.NoConstructor, location, $"'{symbol.Name}' has no constructor [JsonModel] can use: add a parameterless one, a single public one, or mark one [JsonConstructor]"));
+                diagnostics.Add(DiagnosticInfo.Create(JsonDiagnostics.NoConstructor, location, $"'{symbol.Name}' has no constructor [JsonModel] can use: add a parameterless one, a single public one, or mark one [JsonCreator]"));
                 fatal = true;
                 return new ConstructionInfo(ConstructionKind.None, EquatableArray<ParameterInfo>.Empty, false);
             }
@@ -594,7 +532,7 @@ internal static class ModelExtractor
 
             if ( member is null && !parameter.HasExplicitDefaultValue )
             {
-                diagnostics.Add(DiagnosticInfo.Create(JsonDiagnostics.NoConstructor, location, $"Constructor parameter '{parameter.Name}' of '{symbol.Name}' matches no member of the same type, so it can't be read from JSON; add a matching property, give it a default value, or mark another constructor [JsonConstructor]"));
+                diagnostics.Add(DiagnosticInfo.Create(JsonDiagnostics.NoConstructor, location, $"Constructor parameter '{parameter.Name}' of '{symbol.Name}' matches no member of the same type, so it can't be read from JSON; add a matching property, give it a default value, or mark another constructor [JsonCreator]"));
                 fatal = true;
             }
 

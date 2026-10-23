@@ -1,10 +1,6 @@
 // Jakar.Json.Tests
 // 10/07/2026
 
-using System.Text.Json.Serialization;
-
-
-
 namespace Jakar.Json.Tests;
 
 
@@ -186,7 +182,7 @@ public sealed partial class Keyed<TKey>
 [JsonModel]
 public sealed partial class Account
 {
-    [JsonConstructor] public Account( string login, int age )
+    [JsonCreator] public Account( string login, int age )
     {
         Login = login;
         Age   = age;
@@ -200,24 +196,130 @@ public sealed partial class Account
 
 
 
-// ─── System.Text.Json attribute migration ────────────────────────────────────
+// ─── Member attributes ───────────────────────────────────────────────────────
 
 
 
 [JsonModel]
-public sealed partial class Migrated
+public sealed partial class Shorthand
 {
-    [JsonPropertyName("full_name")] public string Name { get; set; } = "";
+    [JsonKey("full_name")] public string Name { get; set; } = "";
 
-    [JsonPropertyOrder(-1)] public int First { get; set; }
+    [JsonOrder(-1)] public int First { get; set; }
 
-    [JsonIgnore] public string Secret { get; set; } = "hidden";
+    [JsonSkip] public string Secret { get; set; } = "hidden";
 
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public string? Optional { get; set; }
+    [JsonSkip(Condition = JsonSkipCondition.WhenNull)] public string? Optional { get; set; }
 
-    [JsonInclude] internal int Internal { get; set; }
+    [JsonSkip(Condition = JsonSkipCondition.WhenDefault)] public int Zero { get; set; }
 
-    [JsonMember(Name = "wins")] [JsonPropertyName("loses")] public int Both { get; set; }
+    [JsonOptIn] internal int Internal { get; set; }
+
+    [JsonMandatory] public string Code { get; set; } = "";
+
+    [JsonMember(Name = "wins")] [JsonKey("loses")] public int Both { get; set; }
+
+    [JsonMember(Ignore = false)] [JsonSkip] public int Kept { get; set; }
+}
+
+
+
+// ─── Read-only (computed) members ────────────────────────────────────────────
+
+
+
+[JsonModel]
+public sealed partial class Computed
+{
+    public int A { get; set; }
+    public int B { get; set; }
+
+    public int Sum => A + B; // written, never read (JJSON011)
+
+    [JsonMember(ReadOnly = JsonReadOnlyMembers.Ignore)] public int Product => A * B;
+}
+
+
+
+[JsonModel(ReadOnlyMembers = JsonReadOnlyMembers.Ignore)]
+public sealed partial class ComputedIgnored
+{
+    public int A { get; set; }
+
+    public int Twice => A * 2;
+
+    [JsonMember(ReadOnly = JsonReadOnlyMembers.Write)] public int Thrice => A * 3;
+
+    [JsonSkip] public int Hidden { get; set; } = 5;
+}
+
+
+
+/// <summary> A get-only member bound to a constructor parameter is read through it, so <c>ReadOnlyMembers = Ignore</c> keeps it. </summary>
+[JsonModel(ReadOnlyMembers = JsonReadOnlyMembers.Ignore)]
+public sealed partial class ComputedBound( int x )
+{
+    public int X      { get; } = x;
+    public int Double => X * 2;
+}
+
+
+
+// ─── Extension data ([JsonOverflow]) ────────────────────────────────────────
+
+
+
+[JsonModel]
+public sealed partial class Overflowing
+{
+    public string Name { get; set; } = "";
+
+    [JsonOverflow] public OrderedDictionary<string, JNode?>? Extra { get; set; }
+}
+
+
+
+/// <summary> A get-only bag: captured members are added to the instance the type created. </summary>
+[JsonModel(Naming = JsonNaming.CamelCase)]
+public sealed partial class OverflowingNode
+{
+    public int Id { get; set; }
+
+    [JsonOverflow] public JObjectNode Rest { get; } = new();
+}
+
+
+
+[JsonModel]
+public sealed partial record OverflowingRecord( string Name )
+{
+    [JsonOverflow] public JObjectNode? Rest { get; init; }
+}
+
+
+
+// ─── Non-finite floats ───────────────────────────────────────────────────────
+
+
+
+[JsonModel]
+public sealed partial class Floats
+{
+    public double                     Double   { get; set; }
+    public float                      Single   { get; set; }
+    public Half                       Half     { get; set; }
+    public double?                    Nullable { get; set; }
+    public double[]                   Array    { get; set; } = [];
+    public Dictionary<string, double> Map      { get; set; } = [];
+    public decimal                    Decimal  { get; set; }
+}
+
+
+
+[JsonModel(NonFiniteFloats = JsonNonFiniteFloats.Error)]
+public sealed partial class StrictFloats
+{
+    public double Value { get; set; }
 }
 
 

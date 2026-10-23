@@ -64,7 +64,96 @@ public sealed class FeatureTests
         Assert.That(Numeric.TryFromJson("""{"Status":"Nope"}""", out _), Is.False);
     }
 
-    [Test] public void NaN_WithoutAsString_IsAWriteError() { Assert.Throws<JsonWriteException>(() => new Scalars { Double = double.NaN }.ToJson()); }
+    [Test] public void NonFiniteFloats_RoundTripByDefault()
+    {
+        Floats value = new()
+                       {
+                           Double   = double.NaN,
+                           Single   = float.PositiveInfinity,
+                           Half     = Half.NegativeInfinity,
+                           Nullable = double.NaN,
+                           Array    = [1.5, double.NaN, double.NegativeInfinity],
+                           Map      = new Dictionary<string, double> { ["x"] = double.PositiveInfinity }
+                       };
+
+        string json = value.ToJson();
+
+        Assert.That(json, Is.EqualTo("""{"Double" : "NaN","Single" : "Infinity","Half" : "-Infinity","Nullable" : "NaN","Array" : [1.5,"NaN","-Infinity"],"Map" : {"x" : "Infinity"},"Decimal" : 0}"""));
+
+        Floats back = Floats.FromJson(json);
+        Assert.That(back.Double,   Is.NaN);
+        Assert.That(back.Single,   Is.EqualTo(float.PositiveInfinity));
+        Assert.That(back.Half,     Is.EqualTo(Half.NegativeInfinity));
+        Assert.That(back.Nullable, Is.NaN);
+        Assert.That(back.Array,    Is.EqualTo(new[] { 1.5, double.NaN, double.NegativeInfinity }));
+        Assert.That(back.Map["x"], Is.EqualTo(double.PositiveInfinity));
+        Assert.That(Floats.FromJson(Encoding.UTF8.GetBytes(json)).Double, Is.NaN, "UTF-8");
+
+        Assert.That(Floats.TryFromJson("""{"Decimal":"NaN"}""", out _), Is.False, "decimal has no NaN");
+        Assert.That(Floats.TryFromJson("""{"Double":NaN}""",    out _), Is.False, "JSON has no bare NaN literal");
+        Assert.That(Floats.TryFromJson("""{"Double":"nan"}""",  out _), Is.False, "the names are case-sensitive");
+        Assert.That(new Scalars { Double = double.NaN }.ToJson(),        Does.Contain("\"NaN\""));
+    }
+
+    [Test] public void NonFiniteFloats_Error_IsOptIn()
+    {
+        Assert.Throws<JsonWriteException>(() => new StrictFloats { Value = double.NaN }.ToJson());
+        Assert.That(StrictFloats.TryFromJson("""{"Value":"NaN"}""", out _), Is.False);
+        Assert.That(StrictFloats.FromJson("""{"Value":1.25}""").Value,       Is.EqualTo(1.25));
+    }
+
+    [Test] public void ReadOnlyMembers_WriteByDefault_IgnoreOnRequest()
+    {
+        Computed computed = new()
+                            {
+                                A = 2,
+                                B = 3
+                            };
+
+        Assert.That(computed.ToJson(),                                     Is.EqualTo("""{"A" : 2,"B" : 3,"Sum" : 5}"""), "Sum is written; Product is [JsonMember(ReadOnly = Ignore)]");
+        Assert.That(Computed.FromJson("""{"A":1,"B":1,"Sum":99}""").Sum, Is.EqualTo(2),                                 "a computed member in the input is skipped");
+
+        ComputedIgnored ignored = new() { A = 2 };
+        Assert.That(ignored.ToJson(),                                         Is.EqualTo("""{"A" : 2,"Thrice" : 6}"""), "Twice is ignored by the type; Thrice opts back in");
+        Assert.That(ComputedIgnored.FromJson("""{"A":4,"Twice":1}""").Twice, Is.EqualTo(8));
+
+        Assert.That(new ComputedBound(4).ToJson(),               Is.EqualTo("""{"X" : 4}"""), "X is bound to the constructor, so it's kept");
+        Assert.That(ComputedBound.FromJson("""{"X":5}""").Double, Is.EqualTo(10));
+    }
+
+    [Test] public void Overflow_CapturesAndWritesUnknownMembers()
+    {
+        const string JSON = """{"Name" : "x","extra" : {"n" : [1,2.50,1e400,"s",null,true]},"flag" : false}""";
+
+        Overflowing value = Overflowing.FromJson(JSON);
+        Assert.That(value.Name,                                   Is.EqualTo("x"));
+        Assert.That(value.Extra!.Keys,                            Is.EqualTo(new[] { "extra", "flag" }), "input order");
+        Assert.That(value.Extra["extra"]!["n"]![1]!.ToJson(),     Is.EqualTo("2.50"),  "numbers keep their text");
+        Assert.That(value.Extra["extra"]!["n"]![2]!.ToJson(),     Is.EqualTo("1e400"), "even beyond double");
+        Assert.That(value.ToJson(),                               Is.EqualTo(JSON),    "round trip");
+        Assert.That(Overflowing.FromJson(Encoding.UTF8.GetBytes(JSON)).ToJson(), Is.EqualTo(JSON), "UTF-8 round trip");
+        Assert.That(Overflowing.FromJson("""{"Name":"y"}""").Extra, Is.Null, "nothing to capture: the bag isn't created");
+
+        Overflowing built = new()
+                            {
+                                Name  = "y",
+                                Extra = new OrderedDictionary<string, JNode?> { ["e"] = JNode.Parse("""{ "k" : [ 1 , "v" ] }"""), ["z"] = null }
+                            };
+
+        Assert.That(built.ToJson(), Is.EqualTo("""{"Name" : "y","e" : {"k" : [1,"v"]},"z" : null}"""), "written after the declared members");
+    }
+
+    [Test] public void Overflow_GetOnlyBag_AndInitOnlyBag()
+    {
+        OverflowingNode node = OverflowingNode.FromJson("""{"id":1,"a":"b","c":[2]}""");
+        Assert.That(node.Id,                Is.EqualTo(1));
+        Assert.That(node.Rest.Count,        Is.EqualTo(2), "added to the bag the type created");
+        Assert.That(node.ToJson(),          Is.EqualTo("""{"id" : 1,"a" : "b","c" : [2]}"""));
+
+        OverflowingRecord record = OverflowingRecord.FromJson("""{"Name":"n","more":1.5}""");
+        Assert.That(record.Rest!["more"]!.ToJson(), Is.EqualTo("1.5"));
+        Assert.That(record.ToJson(),               Is.EqualTo("""{"Name" : "n","more" : 1.5}"""));
+    }
 
     [Test] public void TypeDefaults_ApplyToItsOwnOutput()
     {
@@ -213,25 +302,56 @@ public sealed class FeatureTests
         Assert.That(Account.TryFromJson("""{"Login":"ada","Age":36}""", out _), Is.False, "Email is [JsonMember(Required = true)]");
     }
 
-    [Test] public void SystemTextJsonAttributes_AreHonored()
+    [Test] public void TypeCodec_WritesIntoAnOpenWriter()
     {
-        Migrated value = new()
-                         {
-                             Name     = "Ada",
-                             First    = 1,
-                             Secret   = "s",
-                             Optional = null,
-                             Internal = 7,
-                             Both     = 3
-                         };
+        Assert.That(JsonCodecRegistry.TryGet(typeof(Shorthand),       out JsonTypeCodec? model), Is.True);
+        Assert.That(JsonCodecRegistry.TryGet(typeof(List<Shorthand>), out JsonTypeCodec? list),  Is.True);
+
+        const string ITEM = """{"First" : 0,"full_name" : "","Internal" : 0,"Code" : "c","wins" : 0,"Kept" : 0}""";
+        JsonWriter   writer = new(JsonWriterOptions.Default);
+
+        try
+        {
+            writer.WriteStartObject();
+            writer.WritePropertyName("a");
+            model!.WriteValue(new Shorthand { Code = "c" }, ref writer);
+            writer.WritePropertyName("b");
+            model.WriteValue(null, ref writer);
+            writer.WritePropertyName("c");
+            list!.WriteValue(new List<Shorthand> { new() { Code = "c" } }, ref writer);
+            writer.WriteEndObject();
+
+            Assert.That(writer.ToString(), Is.EqualTo($$"""{"a" : {{ITEM}},"b" : null,"c" : [{{ITEM}}]}"""));
+        }
+        finally { writer.Dispose(); }
+    }
+
+    [Test] public void MemberAttributes_AreHonored()
+    {
+        Shorthand value = new()
+                          {
+                              Name     = "Ada",
+                              First    = 1,
+                              Secret   = "s",
+                              Optional = null,
+                              Zero     = 0,
+                              Internal = 7,
+                              Code     = "c",
+                              Both     = 3,
+                              Kept     = 4
+                          };
 
         string json = value.ToJson();
 
-        Assert.That(json, Is.EqualTo("""{"First" : 1,"full_name" : "Ada","Internal" : 7,"wins" : 3}"""));
+        Assert.That(json, Is.EqualTo("""{"First" : 1,"full_name" : "Ada","Internal" : 7,"Code" : "c","wins" : 3,"Kept" : 4}"""));
+        Assert.That(new Shorthand { Optional = "o", Zero = 2, Code = "c" }.ToJson(), Does.Contain("\"Optional\" : \"o\"").And.Contain("\"Zero\" : 2"), "WhenNull / WhenDefault only skip null / default");
 
-        Migrated back = Migrated.FromJson(json);
+        Shorthand back = Shorthand.FromJson(json);
         Assert.That(back.Secret,   Is.EqualTo("hidden"));
         Assert.That(back.Internal, Is.EqualTo(7));
+        Assert.That(back.Kept,     Is.EqualTo(4), "[JsonMember(Ignore = false)] overrides [JsonSkip]");
+        Assert.That(Shorthand.FromJson("""{"Code":"c","Secret":"s"}""").Secret, Is.EqualTo("hidden"), "a skipped member is never read");
+        Assert.That(Shorthand.TryFromJson("""{"full_name":"x"}""", out _),     Is.False,              "Code is [JsonMandatory]");
     }
 
     [Test] public void NestedType_KebabCase()

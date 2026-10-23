@@ -61,6 +61,9 @@ jobs:
 
           dotnet pack Jakar.Json/Jakar.Json.csproj -c Release -o artifacts/1-core
 
+          # The integrations reference this Jakar.Json package (Release), which isn't on nuget.org until the push below.
+          dotnet nuget add source "$PWD/artifacts/1-core" --name LocalJakarJson --configfile nuget.config
+
           base=(Jakar.Json.SystemTextJson Jakar.Json.Http)
           for name in "${base[@]}"; do
             dotnet pack "$name/$name.csproj" -c Release -o artifacts/2-base

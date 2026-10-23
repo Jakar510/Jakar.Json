@@ -33,31 +33,25 @@ Toolchain=InProcessEmitToolchain
 | NewtonsoftJObject_SumPrices | DOM                  | 7500  | 42,816,054.5 ns | 855,081.85 ns | 1,331,259.54 ns |  6.15 |    0.27 | 3000.0000 | 2909.0909 | 909.0909 | 17888626 B |        2.81 |
 |                             |                      |       |                 |               |                 |       |         |           |           |          |            |             |
 | JakarJson_FromUtf8          | Deserialize UTF-8    | 1     |      1,003.1 ns |      19.26 ns |        46.15 ns |  1.00 |    0.06 |    0.0439 |         - |        - |      368 B |        1.00 |
-| JsonModelHybrid_FromUtf8    | Deserialize UTF-8    | 1     |      1,065.3 ns |      21.25 ns |        40.42 ns |  1.06 |    0.06 |    0.0439 |         - |        - |      368 B |        1.00 |
 | SystemTextJson_FromUtf8     | Deserialize UTF-8    | 1     |      1,235.0 ns |      24.25 ns |        49.53 ns |  1.23 |    0.07 |    0.1030 |         - |        - |      864 B |        2.35 |
 | Newtonsoft_FromUtf8         | Deserialize UTF-8    | 1     |      2,701.4 ns |      53.87 ns |       111.25 ns |  2.70 |    0.16 |    1.0529 |    0.0153 |        - |     8832 B |       24.00 |
 |                             |                      |       |                 |               |                 |       |         |           |           |          |            |             |
 | JakarJson_FromUtf8          | Deserialize UTF-8    | 75    |     32,761.1 ns |     653.73 ns |     1,320.57 ns |  1.00 |    0.06 |    1.4038 |         - |        - |    12208 B |        1.00 |
-| JsonModelHybrid_FromUtf8    | Deserialize UTF-8    | 75    |     32,889.3 ns |     648.96 ns |     1,382.99 ns |  1.01 |    0.06 |    1.4038 |         - |        - |    12208 B |        1.00 |
 | SystemTextJson_FromUtf8     | Deserialize UTF-8    | 75    |     43,062.9 ns |     851.06 ns |     1,076.32 ns |  1.32 |    0.06 |    1.6479 |    0.0610 |        - |    14216 B |        1.16 |
 | Newtonsoft_FromUtf8         | Deserialize UTF-8    | 75    |     74,388.2 ns |   1,471.10 ns |     2,333.32 ns |  2.27 |    0.12 |    3.0518 |    0.1221 |        - |    26137 B |        2.14 |
 |                             |                      |       |                 |               |                 |       |         |           |           |          |            |             |
 | JakarJson_FromUtf8          | Deserialize UTF-8    | 7500  |  3,233,452.8 ns |  64,584.97 ns |    63,431.08 ns |  1.00 |    0.03 |  148.4375 |   78.1250 |        - |  1259431 B |        1.00 |
-| JsonModelHybrid_FromUtf8    | Deserialize UTF-8    | 7500  |  3,323,385.1 ns |  56,259.55 ns |    52,625.22 ns |  1.03 |    0.03 |  148.4375 |   78.1250 |        - |  1259431 B |        1.00 |
 | SystemTextJson_FromUtf8     | Deserialize UTF-8    | 7500  |  4,398,883.5 ns |  86,849.95 ns |   142,696.98 ns |  1.36 |    0.05 |  156.2500 |  109.3750 |        - |  1331231 B |        1.06 |
 | Newtonsoft_FromUtf8         | Deserialize UTF-8    | 7500  |  7,519,787.4 ns | 150,214.26 ns |   172,986.97 ns |  2.33 |    0.07 |  203.1250 |  125.0000 |        - |  1744357 B |        1.39 |
 |                             |                      |       |                 |               |                 |       |         |           |           |          |            |             |
-| JsonModelHybrid_FromString  | Deserialize string   | 1     |        978.7 ns |      19.61 ns |        28.74 ns |  0.99 |    0.04 |    0.0439 |         - |        - |      368 B |        1.00 |
 | JakarJson_FromString        | Deserialize string   | 1     |        989.4 ns |      18.10 ns |        28.18 ns |  1.00 |    0.04 |    0.0439 |         - |        - |      368 B |        1.00 |
 | SystemTextJson_FromString   | Deserialize string   | 1     |      1,382.0 ns |      26.73 ns |        23.70 ns |  1.40 |    0.05 |    0.1030 |         - |        - |      864 B |        2.35 |
 | Newtonsoft_FromString       | Deserialize string   | 1     |      2,711.8 ns |      53.65 ns |       103.37 ns |  2.74 |    0.13 |    0.6981 |    0.0076 |        - |     5856 B |       15.91 |
 |                             |                      |       |                 |               |                 |       |         |           |           |          |            |             |
 | JakarJson_FromString        | Deserialize string   | 75    |     30,534.7 ns |     522.15 ns |       621.58 ns |  1.00 |    0.03 |    1.4343 |    0.0305 |        - |    12208 B |        1.00 |
-| JsonModelHybrid_FromString  | Deserialize string   | 75    |     31,277.7 ns |     605.70 ns |       505.79 ns |  1.02 |    0.03 |    1.4038 |         - |        - |    12208 B |        1.00 |
 | SystemTextJson_FromString   | Deserialize string   | 75    |     46,531.4 ns |     921.61 ns |     1,097.12 ns |  1.52 |    0.05 |    1.6479 |    0.0610 |        - |    14216 B |        1.16 |
 | Newtonsoft_FromString       | Deserialize string   | 75    |     73,073.5 ns |   1,455.83 ns |     2,391.98 ns |  2.39 |    0.09 |    2.6855 |    0.1221 |        - |    23161 B |        1.90 |
 |                             |                      |       |                 |               |                 |       |         |           |           |          |            |             |
-| JsonModelHybrid_FromString  | Deserialize string   | 7500  |  2,792,363.2 ns |   8,199.17 ns |     6,846.68 ns |  0.92 |    0.02 |  148.4375 |   78.1250 |        - |  1259430 B |        1.00 |
 | JakarJson_FromString        | Deserialize string   | 7500  |  3,034,344.5 ns |  58,991.25 ns |    55,180.45 ns |  1.00 |    0.02 |  148.4375 |   78.1250 |        - |  1259431 B |        1.00 |
 | SystemTextJson_FromString   | Deserialize string   | 7500  |  4,590,354.2 ns |  91,315.73 ns |   133,849.43 ns |  1.51 |    0.05 |  156.2500 |  109.3750 |        - |  1331231 B |        1.06 |
 | Newtonsoft_FromString       | Deserialize string   | 7500  |  7,301,285.3 ns | 125,247.80 ns |   111,028.92 ns |  2.41 |    0.05 |  203.1250 |  117.1875 |        - |  1741260 B |        1.38 |
@@ -72,59 +66,49 @@ Toolchain=InProcessEmitToolchain
 | StjDocument_SumPrices       | Navigate (read-only) | 7500  |  2,681,552.2 ns |  16,848.64 ns |    14,935.88 ns |  1.36 |    0.01 |         - |         - |        - |       94 B |        1.09 |
 |                             |                      |       |                 |               |                 |       |         |           |           |          |            |             |
 | JakarJson_Stream            | Serialize Stream     | 1     |        351.7 ns |       0.62 ns |         0.58 ns |  1.00 |    0.00 |         - |         - |        - |          - |          NA |
-| JsonModelHybrid_Stream      | Serialize Stream     | 1     |        407.5 ns |       1.13 ns |         1.06 ns |  1.16 |    0.00 |         - |         - |        - |          - |          NA |
 | SystemTextJson_Stream       | Serialize Stream     | 1     |        476.0 ns |       1.66 ns |         1.55 ns |  1.35 |    0.00 |    0.0067 |         - |        - |       56 B |          NA |
 | Newtonsoft_Stream           | Serialize Stream     | 1     |      2,009.5 ns |      26.81 ns |        25.08 ns |  5.71 |    0.07 |    1.1368 |    0.0305 |        - |     9528 B |          NA |
 |                             |                      |       |                 |               |                 |       |         |           |           |          |            |             |
 | JakarJson_Stream            | Serialize Stream     | 75    |     13,766.2 ns |      59.40 ns |        55.56 ns |  1.00 |    0.01 |         - |         - |        - |          - |          NA |
-| JsonModelHybrid_Stream      | Serialize Stream     | 75    |     13,804.7 ns |      53.19 ns |        47.15 ns |  1.00 |    0.01 |         - |         - |        - |          - |          NA |
 | SystemTextJson_Stream       | Serialize Stream     | 75    |     17,020.6 ns |      41.60 ns |        34.74 ns |  1.24 |    0.01 |         - |         - |        - |       56 B |          NA |
 | Newtonsoft_Stream           | Serialize Stream     | 75    |     49,984.8 ns |     289.94 ns |       271.21 ns |  3.63 |    0.02 |    3.6011 |    0.2441 |        - |    30136 B |          NA |
 |                             |                      |       |                 |               |                 |       |         |           |           |          |            |             |
 | JakarJson_Stream            | Serialize Stream     | 7500  |  1,323,862.9 ns |   8,524.18 ns |     7,973.53 ns |  1.00 |    0.01 |         - |         - |        - |       12 B |        1.00 |
-| JsonModelHybrid_Stream      | Serialize Stream     | 7500  |  1,345,188.7 ns |   6,054.83 ns |     5,663.70 ns |  1.02 |    0.01 |         - |         - |        - |       12 B |        1.00 |
 | SystemTextJson_Stream       | Serialize Stream     | 7500  |  2,469,310.5 ns |   7,099.72 ns |     6,641.08 ns |  1.87 |    0.01 |         - |         - |        - |      527 B |       43.92 |
 | Newtonsoft_Stream           | Serialize Stream     | 7500  |  4,939,314.2 ns |  47,306.09 ns |    44,250.15 ns |  3.73 |    0.04 |  101.5625 |         - |        - |   861783 B |   71,815.25 |
 |                             |                      |       |                 |               |                 |       |         |           |           |          |            |             |
 | JakarJson_Utf8_IntoBuffer   | Serialize UTF-8      | 1     |        375.8 ns |       1.60 ns |         1.49 ns |  1.00 |    0.01 |         - |         - |        - |          - |        0.00 |
 | JakarJson_Utf8              | Serialize UTF-8      | 1     |        377.2 ns |       2.16 ns |         2.02 ns |  1.00 |    0.01 |    0.0334 |         - |        - |      280 B |        1.00 |
-| JsonModelHybrid_Utf8        | Serialize UTF-8      | 1     |        400.3 ns |       1.03 ns |         0.92 ns |  1.06 |    0.01 |    0.0334 |         - |        - |      280 B |        1.00 |
 | SystemTextJson_Utf8         | Serialize UTF-8      | 1     |        446.6 ns |       1.39 ns |         1.30 ns |  1.18 |    0.01 |    0.0324 |         - |        - |      272 B |        0.97 |
 | Newtonsoft_Utf8             | Serialize UTF-8      | 1     |      2,206.7 ns |      41.51 ns |        42.63 ns |  5.85 |    0.11 |    1.2093 |    0.0343 |        - |    10128 B |       36.17 |
 |                             |                      |       |                 |               |                 |       |         |           |           |          |            |             |
 | JakarJson_Utf8_IntoBuffer   | Serialize UTF-8      | 75    |     15,457.9 ns |     300.78 ns |       401.53 ns |  0.99 |    0.04 |         - |         - |        - |          - |        0.00 |
-| JsonModelHybrid_Utf8        | Serialize UTF-8      | 75    |     15,524.2 ns |     304.21 ns |       455.32 ns |  0.99 |    0.04 |    0.9155 |         - |        - |     7848 B |        1.00 |
 | JakarJson_Utf8              | Serialize UTF-8      | 75    |     15,703.8 ns |     277.49 ns |       514.35 ns |  1.00 |    0.05 |    0.9155 |         - |        - |     7848 B |        1.00 |
 | SystemTextJson_Utf8         | Serialize UTF-8      | 75    |     19,692.3 ns |     386.63 ns |       601.94 ns |  1.26 |    0.06 |    0.9766 |         - |        - |     8200 B |        1.04 |
 | Newtonsoft_Utf8             | Serialize UTF-8      | 75    |     57,854.3 ns |   1,132.63 ns |     2,154.94 ns |  3.69 |    0.18 |    5.8594 |    0.3662 |        - |    50017 B |        6.37 |
 |                             |                      |       |                 |               |                 |       |         |           |           |          |            |             |
 | JakarJson_Utf8_IntoBuffer   | Serialize UTF-8      | 7500  |  1,492,679.3 ns |  29,188.65 ns |    44,574.15 ns |  0.92 |    0.05 |         - |         - |        - |       12 B |       0.000 |
-| JsonModelHybrid_Utf8        | Serialize UTF-8      | 7500  |  1,514,728.7 ns |  26,977.82 ns |    29,985.78 ns |  0.94 |    0.04 |   11.7188 |   11.7188 |  11.7188 |   781418 B |       1.000 |
 | JakarJson_Utf8              | Serialize UTF-8      | 7500  |  1,620,660.4 ns |  32,073.29 ns |    66,236.91 ns |  1.00 |    0.06 |   23.4375 |   23.4375 |  23.4375 |   781488 B |       1.000 |
 | SystemTextJson_Utf8         | Serialize UTF-8      | 7500  |  2,073,728.3 ns |  40,365.46 ns |    60,417.12 ns |  1.28 |    0.06 |    7.8125 |    7.8125 |   7.8125 |   818886 B |       1.048 |
 | Newtonsoft_Utf8             | Serialize UTF-8      | 7500  |  5,714,691.4 ns | 111,939.30 ns |   177,547.60 ns |  3.53 |    0.18 |  242.1875 |  132.8125 | 125.0000 |  3731504 B |       4.775 |
 |                             |                      |       |                 |               |                 |       |         |           |           |          |            |             |
 | JakarJson_String            | Serialize string     | 1     |        339.2 ns |       5.97 ns |        14.08 ns |  1.00 |    0.06 |    0.0629 |         - |        - |      528 B |        1.00 |
-| JsonModelHybrid_String      | Serialize string     | 1     |        340.4 ns |       2.61 ns |         2.18 ns |  1.01 |    0.04 |    0.0629 |         - |        - |      528 B |        1.00 |
 | JakarJson_Chars_IntoBuffer  | Serialize string     | 1     |        342.8 ns |       0.98 ns |         0.86 ns |  1.01 |    0.04 |         - |         - |        - |          - |        0.00 |
 | SystemTextJson_String       | Serialize string     | 1     |        552.9 ns |      10.98 ns |        25.00 ns |  1.63 |    0.10 |    0.0601 |         - |        - |      504 B |        0.95 |
 | Newtonsoft_String           | Serialize string     | 1     |      1,500.4 ns |       8.30 ns |         7.36 ns |  4.43 |    0.17 |    0.3109 |         - |        - |     2616 B |        4.95 |
 |                             |                      |       |                 |               |                 |       |         |           |           |          |            |             |
 | JakarJson_Chars_IntoBuffer  | Serialize string     | 75    |      8,879.1 ns |      37.24 ns |        29.07 ns |  0.91 |    0.01 |         - |         - |        - |          - |        0.00 |
 | JakarJson_String            | Serialize string     | 75    |      9,720.3 ns |      76.96 ns |        64.27 ns |  1.00 |    0.01 |    1.8005 |         - |        - |    15208 B |        1.00 |
-| JsonModelHybrid_String      | Serialize string     | 75    |     10,784.9 ns |      97.25 ns |        86.21 ns |  1.11 |    0.01 |    1.8005 |         - |        - |    15208 B |        1.00 |
 | SystemTextJson_String       | Serialize string     | 75    |     18,228.4 ns |      69.58 ns |        65.08 ns |  1.88 |    0.01 |    1.9531 |         - |        - |    16376 B |        1.08 |
 | Newtonsoft_String           | Serialize string     | 75    |     42,153.7 ns |     271.25 ns |       253.73 ns |  4.34 |    0.04 |    4.7607 |    0.1221 |        - |    40336 B |        2.65 |
 |                             |                      |       |                 |               |                 |       |         |           |           |          |            |             |
 | JakarJson_Chars_IntoBuffer  | Serialize string     | 7500  |    850,095.9 ns |   3,538.89 ns |     3,310.28 ns |  0.83 |    0.01 |         - |         - |        - |        6 B |       0.000 |
 | JakarJson_String            | Serialize string     | 7500  |  1,028,002.2 ns |   6,729.27 ns |     6,294.56 ns |  1.00 |    0.01 |   42.9688 |   42.9688 |  42.9688 |  1517908 B |       1.000 |
-| JsonModelHybrid_String      | Serialize string     | 7500  |  1,103,974.9 ns |   9,461.86 ns |     8,850.63 ns |  1.07 |    0.01 |   41.0156 |   41.0156 |  41.0156 |  1517896 B |       1.000 |
 | SystemTextJson_String       | Serialize string     | 7500  |  1,988,415.2 ns |   9,740.45 ns |     9,111.22 ns |  1.93 |    0.01 |   31.2500 |   31.2500 |  31.2500 |  1637818 B |       1.079 |
 | Newtonsoft_String           | Serialize string     | 7500  |  4,332,946.4 ns |  32,582.67 ns |    28,883.69 ns |  4.22 |    0.04 |  281.2500 |  164.0625 |  15.6250 |  3592132 B |       2.367 |
 
 // * Warnings *
 MultimodalDistribution
-  JakarJson_Benchmarks.JsonModelHybrid_FromUtf8: Toolchain=InProcessEmitToolchain -> It seems that the distribution can have several modes (mValue = 3)
 
 // * Hints *
 Outliers
@@ -142,31 +126,23 @@ Outliers
   JakarJson_Benchmarks.JakarJson_FromString: Toolchain=InProcessEmitToolchain        -> 1 outlier  was  removed (1.07 us)
   JakarJson_Benchmarks.SystemTextJson_FromString: Toolchain=InProcessEmitToolchain   -> 1 outlier  was  removed (1.50 us)
   JakarJson_Benchmarks.JakarJson_FromString: Toolchain=InProcessEmitToolchain        -> 1 outlier  was  removed, 2 outliers were detected (28.83 us, 32.34 us)
-  JakarJson_Benchmarks.JsonModelHybrid_FromString: Toolchain=InProcessEmitToolchain  -> 2 outliers were removed (33.85 us, 34.85 us)
   JakarJson_Benchmarks.SystemTextJson_FromString: Toolchain=InProcessEmitToolchain   -> 1 outlier  was  removed (51.20 us)
-  JakarJson_Benchmarks.JsonModelHybrid_FromString: Toolchain=InProcessEmitToolchain  -> 4 outliers were removed (2.95 ms..3.07 ms)
   JakarJson_Benchmarks.JakarJson_FromString: Toolchain=InProcessEmitToolchain        -> 1 outlier  was  removed (3.26 ms)
   JakarJson_Benchmarks.Newtonsoft_FromString: Toolchain=InProcessEmitToolchain       -> 1 outlier  was  removed, 4 outliers were detected (7.10 ms..7.14 ms, 7.54 ms)
   JakarJson_Benchmarks.StjDocument_SumPrices: Toolchain=InProcessEmitToolchain       -> 1 outlier  was  removed, 2 outliers were detected (26.66 us, 26.98 us)
   JakarJson_Benchmarks.JakarJsonTape_SumPrices: Toolchain=InProcessEmitToolchain     -> 1 outlier  was  removed (1.99 ms)
   JakarJson_Benchmarks.StjDocument_SumPrices: Toolchain=InProcessEmitToolchain       -> 1 outlier  was  removed (2.73 ms)
   JakarJson_Benchmarks.Newtonsoft_Stream: Toolchain=InProcessEmitToolchain           -> 1 outlier  was  detected (1.93 us)
-  JakarJson_Benchmarks.JsonModelHybrid_Stream: Toolchain=InProcessEmitToolchain      -> 1 outlier  was  removed (14.02 us)
   JakarJson_Benchmarks.SystemTextJson_Stream: Toolchain=InProcessEmitToolchain       -> 2 outliers were removed (17.16 us, 17.27 us)
-  JakarJson_Benchmarks.JsonModelHybrid_Stream: Toolchain=InProcessEmitToolchain      -> 1 outlier  was  detected (1.33 ms)
-  JakarJson_Benchmarks.JsonModelHybrid_Utf8: Toolchain=InProcessEmitToolchain        -> 1 outlier  was  removed (408.75 ns)
   JakarJson_Benchmarks.Newtonsoft_Utf8: Toolchain=InProcessEmitToolchain             -> 1 outlier  was  removed, 4 outliers were detected (2.06 us..2.19 us, 2.25 us)
   JakarJson_Benchmarks.JakarJson_Utf8: Toolchain=InProcessEmitToolchain              -> 3 outliers were removed (17.23 us..17.34 us)
   JakarJson_Benchmarks.SystemTextJson_Utf8: Toolchain=InProcessEmitToolchain         -> 1 outlier  was  removed (22.03 us)
   JakarJson_Benchmarks.JakarJson_Utf8_IntoBuffer: Toolchain=InProcessEmitToolchain   -> 1 outlier  was  detected (1.37 ms)
-  JakarJson_Benchmarks.JsonModelHybrid_Utf8: Toolchain=InProcessEmitToolchain        -> 2 outliers were removed (1.60 ms, 1.63 ms)
   JakarJson_Benchmarks.JakarJson_String: Toolchain=InProcessEmitToolchain            -> 11 outliers were removed (387.28 ns..409.93 ns)
-  JakarJson_Benchmarks.JsonModelHybrid_String: Toolchain=InProcessEmitToolchain      -> 2 outliers were removed (351.83 ns, 351.91 ns)
   JakarJson_Benchmarks.JakarJson_Chars_IntoBuffer: Toolchain=InProcessEmitToolchain  -> 1 outlier  was  removed (347.32 ns)
   JakarJson_Benchmarks.Newtonsoft_String: Toolchain=InProcessEmitToolchain           -> 1 outlier  was  removed (1.53 us)
   JakarJson_Benchmarks.JakarJson_Chars_IntoBuffer: Toolchain=InProcessEmitToolchain  -> 3 outliers were removed, 5 outliers were detected (8.82 us, 8.83 us, 8.98 us..9.02 us)
   JakarJson_Benchmarks.JakarJson_String: Toolchain=InProcessEmitToolchain            -> 2 outliers were removed, 3 outliers were detected (9.58 us, 9.91 us, 10.11 us)
-  JakarJson_Benchmarks.JsonModelHybrid_String: Toolchain=InProcessEmitToolchain      -> 1 outlier  was  removed, 2 outliers were detected (10.56 us, 11.02 us)
   JakarJson_Benchmarks.Newtonsoft_String: Toolchain=InProcessEmitToolchain           -> 1 outlier  was  removed (4.41 ms)
 
 // * Legends *
@@ -198,13 +174,11 @@ Artifacts cleanup is finished
 
 
 /// <summary>
-///     Jakar.Json (<c>[JsonModel]</c>) against <c>[JsonModel]</c> (System.Text.Json source generation, the <c>SystemTextJson_*</c> methods) and Newtonsoft.Json (reflection), on the same model shape (Jakar.Json SPEC.md §12.5).
+///     Jakar.Json (<c>[JsonModel]</c>) against System.Text.Json (source generation, the <c>SystemTextJson_*</c> methods) and Newtonsoft.Json (reflection), on the same model shape (Jakar.Json SPEC.md §12.5).
 ///     Jakar.Json is the baseline of every category: the context-less <c>[JsonModel]</c> <see cref="BenchOrder"/>, and <c>JsonTape</c> / <c>JNode</c> for the dynamic ones.
 ///     <para>
-///         Each library gets its own model type (<see cref="BenchOrder"/> / <see cref="StjOrder"/>): BenchOrder is a context-less [JsonModel] (Jakar.Json only);
-///         StjOrder has a context and Implementation = SystemTextJson, which would otherwise pick Jakar.Json;
-///         HybridOrder is a plain context-backed [JsonModel], so its JsonModelHybrid_* rows measure IJsonModel on Jakar.Json (what Jakar.Extensions models use).
-///         Newtonsoft reads and writes <see cref="StjOrder"/>, which is a plain POCO to it. All three write enums as names.
+///         Each library gets its own model type (<see cref="BenchOrder"/> / <see cref="StjOrder"/>): BenchOrder is a [JsonModel]; StjOrder is a plain class that
+///         System.Text.Json reads and writes through its source-generated <see cref="BenchContext"/>, and Newtonsoft by reflection. All three write enums as names.
 ///     </para>
 ///     Run: <c>dotnet run -c Release --project Jakar.Json.Benchmarks -- --filter *JakarJson*</c>
 /// </summary>
@@ -223,11 +197,10 @@ public class JakarJson_Benchmarks
     private readonly byte[]       __bytes  = new byte[4 * 1024 * 1024];
     private readonly MemoryStream __output = new(4 * 1024 * 1024);
 
-    private BenchOrder  __order    = null!;
-    private StjOrder    __stjOrder = null!;
-    private HybridOrder __hybrid   = null!;
-    private string      __json     = "";
-    private byte[]      __utf8     = [];
+    private BenchOrder __order    = null!;
+    private StjOrder   __stjOrder = null!;
+    private string     __json     = "";
+    private byte[]     __utf8     = [];
 
 
     /// <summary> Lines per order: ≈ 200 B, 10 KB and 1 MB documents. </summary>
@@ -257,7 +230,6 @@ public class JakarJson_Benchmarks
                   };
 
         __stjOrder = StjOrder.From(__order);
-        __hybrid   = HybridOrder.From(__order);
 
         // Every library reads the same document. All three accept the others' output; the inputs differ only in whitespace (Jakar.Json writes "name" : value).
         __json = __order.ToJson();
@@ -278,12 +250,6 @@ public class JakarJson_Benchmarks
         Check(nameof(JakarJson_FromString),       StjOrder.From(JakarJson_FromString()).ToJson());
         Check(nameof(JakarJson_FromUtf8),         StjOrder.From(JakarJson_FromUtf8()).ToJson());
         Check(nameof(Newtonsoft_String),          StjOrder.FromJson(Newtonsoft_String()).ToJson());
-        Check(nameof(JsonModelHybrid_FromString), StjOrder.From(JsonModelHybrid_FromString().ToBench()).ToJson());
-        Check(nameof(JsonModelHybrid_FromUtf8),   StjOrder.From(JsonModelHybrid_FromUtf8().ToBench()).ToJson());
-        Check(nameof(JsonModelHybrid_String),     StjOrder.FromJson(JsonModelHybrid_String()).ToJson());
-
-        // The hybrid rows only mean something if [JsonModel] really picked Jakar.Json for HybridOrder (it falls back to System.Text.Json otherwise: JJSON016).
-        if ( !typeof(HybridOrder).GetInterfaces().Any(static i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(JJ.IJsonSerializable<>)) ) { throw new InvalidOperationException("HybridOrder isn't hybrid: [JsonModel] fell back to System.Text.Json."); }
 
         decimal sum = __order.Lines.Sum(static line => line.Price);
         if ( JakarJsonTape_SumPrices() != sum || JakarJsonNode_SumPrices() != sum || StjDocument_SumPrices() != sum || StjNode_SumPrices() != sum || NewtonsoftJObject_SumPrices() != sum ) { throw new InvalidOperationException("The navigation benchmarks disagree on the sum of prices."); }
@@ -300,7 +266,6 @@ public class JakarJson_Benchmarks
     [Benchmark] [BenchmarkCategory(                 "Serialize string")] public string SystemTextJson_String()  => __stjOrder.ToJson();
     [Benchmark(Baseline = true)] [BenchmarkCategory("Serialize string")] public string JakarJson_String()       => __order.ToJson();
     [Benchmark] [BenchmarkCategory(                 "Serialize string")] public string Newtonsoft_String()      => JsonConvert.SerializeObject(__stjOrder, __newtonsoftSettings);
-    [Benchmark] [BenchmarkCategory(                 "Serialize string")] public string JsonModelHybrid_String() => __hybrid.ToJson();
 
     [Benchmark] [BenchmarkCategory("Serialize string")] public int JakarJson_Chars_IntoBuffer() => __order.TryFormat(__chars, out int written, default, null)
                                                                                                        ? written
@@ -308,7 +273,6 @@ public class JakarJson_Benchmarks
 
     [Benchmark] [BenchmarkCategory(                 "Serialize UTF-8")] public byte[] SystemTextJson_Utf8()  => __stjOrder.ToUtf8Json();
     [Benchmark(Baseline = true)] [BenchmarkCategory("Serialize UTF-8")] public byte[] JakarJson_Utf8()       => __order.ToJsonUtf8();
-    [Benchmark] [BenchmarkCategory(                 "Serialize UTF-8")] public byte[] JsonModelHybrid_Utf8() => __hybrid.ToUtf8Json();
 
     [Benchmark] [BenchmarkCategory("Serialize UTF-8")] public byte[] Newtonsoft_Utf8()
     {
@@ -328,13 +292,6 @@ public class JakarJson_Benchmarks
     {
         __output.Position = 0;
         __stjOrder.WriteToAsync(__output).GetAwaiter().GetResult();
-        return __output.Position;
-    }
-
-    [Benchmark] [BenchmarkCategory("Serialize Stream")] public long JsonModelHybrid_Stream()
-    {
-        __output.Position = 0;
-        __hybrid.WriteToAsync(__output).GetAwaiter().GetResult();
         return __output.Position;
     }
 
@@ -361,11 +318,9 @@ public class JakarJson_Benchmarks
     [Benchmark] [BenchmarkCategory(                 "Deserialize string")] public StjOrder    SystemTextJson_FromString()  => StjOrder.FromJson(__json);
     [Benchmark(Baseline = true)] [BenchmarkCategory("Deserialize string")] public BenchOrder  JakarJson_FromString()       => BenchOrder.FromJson(__json);
     [Benchmark] [BenchmarkCategory(                 "Deserialize string")] public StjOrder?   Newtonsoft_FromString()      => JsonConvert.DeserializeObject<StjOrder>(__json, __newtonsoftSettings);
-    [Benchmark] [BenchmarkCategory(                 "Deserialize string")] public HybridOrder JsonModelHybrid_FromString() => HybridOrder.FromJson(__json);
 
     [Benchmark] [BenchmarkCategory(                 "Deserialize UTF-8")] public StjOrder    SystemTextJson_FromUtf8()  => StjOrder.FromJson(__utf8.AsSpan());
     [Benchmark(Baseline = true)] [BenchmarkCategory("Deserialize UTF-8")] public BenchOrder  JakarJson_FromUtf8()       => BenchOrder.FromJson(__utf8.AsSpan());
-    [Benchmark] [BenchmarkCategory(                 "Deserialize UTF-8")] public HybridOrder JsonModelHybrid_FromUtf8() => HybridOrder.FromJson(__utf8.AsSpan());
 
     [Benchmark] [BenchmarkCategory("Deserialize UTF-8")] public StjOrder? Newtonsoft_FromUtf8()
     {
@@ -462,12 +417,11 @@ public sealed partial class BenchLine
 
 
 
-// ─── [JsonModel] / System.Text.Json (and Newtonsoft.Json, by reflection) ─────
+// ─── System.Text.Json (and Newtonsoft.Json, by reflection) ──────────────────
 
 
 
-[JsonModel(typeof(BenchContext), Implementation = JsonModelImplementation.SystemTextJson)] // the System.Text.Json baseline: without this, [JsonModel] would pick Jakar.Json
-public sealed partial class StjOrder
+public sealed class StjOrder
 {
     public Guid           Id       { get; set; }
     public string         Customer { get; set; } = "";
@@ -494,12 +448,18 @@ public sealed partial class StjOrder
                                                                                                     })
                                                            ]
                                                        };
+
+    public string ToJson()                     => System.Text.Json.JsonSerializer.Serialize(this, BenchContext.Default.StjOrder);
+    public byte[] ToUtf8Json()                 => System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(this, BenchContext.Default.StjOrder);
+    public System.Threading.Tasks.Task WriteToAsync( Stream stream ) => System.Text.Json.JsonSerializer.SerializeAsync(stream, this, BenchContext.Default.StjOrder);
+
+    public static StjOrder FromJson( string             json )     => System.Text.Json.JsonSerializer.Deserialize(json,     BenchContext.Default.StjOrder)!;
+    public static StjOrder FromJson( ReadOnlySpan<byte> utf8Json ) => System.Text.Json.JsonSerializer.Deserialize(utf8Json, BenchContext.Default.StjOrder)!;
 }
 
 
 
-[JsonModel(typeof(BenchContext), Implementation = JsonModelImplementation.SystemTextJson)] // the System.Text.Json baseline: without this, [JsonModel] would pick Jakar.Json
-public sealed partial class StjLine
+public sealed class StjLine
 {
     public string  Sku      { get; set; } = "";
     public string  Name     { get; set; } = "";
@@ -510,78 +470,8 @@ public sealed partial class StjLine
 
 
 
-// ─── [JsonModel] hybrid: IJsonModel on Jakar.Json, the path Jakar.Extensions models take ──
-
-
-
-/// <summary> A plain context-backed <c>[JsonModel]</c>: it picks Jakar.Json (Implementation = Auto), so its <c>IJsonModel</c> members measure the hybrid path end to end. </summary>
-[JsonModel(typeof(BenchContext))]
-public sealed partial class HybridOrder
-{
-    public Guid             Id       { get; set; }
-    public string           Customer { get; set; } = "";
-    public DateTimeOffset   Created  { get; set; }
-    public BenchStatus      Status   { get; set; }
-    public List<HybridLine> Lines    { get; set; } = [];
-
-
-    public static HybridOrder From( BenchOrder order ) => new()
-                                                          {
-                                                              Id       = order.Id,
-                                                              Customer = order.Customer,
-                                                              Created  = order.Created,
-                                                              Status   = order.Status,
-                                                              Lines =
-                                                              [
-                                                                  .. order.Lines.Select(static line => new HybridLine
-                                                                                                       {
-                                                                                                           Sku      = line.Sku,
-                                                                                                           Name     = line.Name,
-                                                                                                           Quantity = line.Quantity,
-                                                                                                           Price    = line.Price,
-                                                                                                           Taxable  = line.Taxable
-                                                                                                       })
-                                                              ]
-                                                          };
-
-    public BenchOrder ToBench() => new()
-                                   {
-                                       Id       = Id,
-                                       Customer = Customer,
-                                       Created  = Created,
-                                       Status   = Status,
-                                       Lines =
-                                       [
-                                           .. Lines.Select(static line => new BenchLine
-                                                                          {
-                                                                              Sku      = line.Sku,
-                                                                              Name     = line.Name,
-                                                                              Quantity = line.Quantity,
-                                                                              Price    = line.Price,
-                                                                              Taxable  = line.Taxable
-                                                                          })
-                                       ]
-                                   };
-}
-
-
-
-[JsonModel(typeof(BenchContext))]
-public sealed partial class HybridLine
-{
-    public string  Sku      { get; set; } = "";
-    public string  Name     { get; set; } = "";
-    public int     Quantity { get; set; }
-    public decimal Price    { get; set; }
-    public bool    Taxable  { get; set; }
-}
-
-
-
-// Enums as names, like Jakar.Json's default and the Newtonsoft StringEnumConverter above (mirrored into HybridOrder's Jakar.Json settings).
+// Enums as names, like Jakar.Json's default and the Newtonsoft StringEnumConverter above.
 [JsonSourceGenerationOptions(UseStringEnumConverter = true)]
 [JsonSerializable(typeof(StjOrder))]
 [JsonSerializable(typeof(StjLine))]
-[JsonSerializable(typeof(HybridOrder))]
-[JsonSerializable(typeof(HybridLine))]
 public sealed partial class BenchContext : JsonSerializerContext;

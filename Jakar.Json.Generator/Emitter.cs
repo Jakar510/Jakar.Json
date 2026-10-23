@@ -43,7 +43,7 @@ internal static class Emitter
 
     public static IEnumerable<EnumInfo> EnumsUsed( ModelInfo model, Settings defaults )
     {
-        if ( model.IsFatal || model.Implementation == Values.IMPLEMENTATION_STJ ) { yield break; }
+        if ( model.IsFatal ) { yield break; }
 
         Settings type = defaults.With(model.Settings);
 
@@ -69,7 +69,7 @@ internal static class Emitter
     }
 
 
-    /// <summary> Whether Jakar.Json can implement <paramref name="model"/>: no extraction or resolution errors. <paramref name="reason"/> is the first error otherwise. </summary>
+    /// <summary> Whether the generator can implement <paramref name="model"/>: no extraction or resolution errors. <paramref name="reason"/> is the first error otherwise. </summary>
     public static bool CanEmit( ModelInfo model, Settings defaults, out string? reason )
     {
         DiagnosticInfo? error = model.Diagnostics.FirstOrDefault(static d => d.Descriptor.DefaultSeverity == DiagnosticSeverity.Error);
@@ -123,10 +123,7 @@ internal static class Emitter
         EmitAccessors(code, model, members);
         EmitOptions(code, model, type);
         EmitInterfaces(code, model);
-
-        // With a context, the IJsonModel part owns the type's own helpers (FromJson/TryFromJson/FromJsonAsync, and ToJson through IJsonModel), calling this code through
-        // JsonCodec: emitting Jakar.Json's helper overloads too would make some calls ambiguous (FromJsonAsync(stream)).
-        if ( !model.ContextRequested ) { EmitHelpers(code, model); }
+        EmitHelpers(code, model);
 
         if ( type.GenerateToString != Values.OFF && !model.OverridesToString ) { code.Line($"public override string ToString() => {J}JsonCodec.ToJson(this);"); }
 
@@ -145,10 +142,8 @@ internal static class Emitter
         problems  = [];
         extension = null;
 
-        // Constructor parameters without defaults are required, unless the model mirrors System.Text.Json (a missing one is its default there).
-        HashSet<string> bound = model.OptionalConstructorParameters
-                                    ? new HashSet<string>(StringComparer.Ordinal)
-                                    : new HashSet<string>(model.Construction.Parameters.Where(static p => p.Member is not null && !p.HasDefault).Select(static p => p.Member!), StringComparer.Ordinal);
+        // Constructor parameters without defaults are required.
+        HashSet<string> bound = new(model.Construction.Parameters.Where(static p => p.Member is not null && !p.HasDefault).Select(static p => p.Member!), StringComparer.Ordinal);
 
         HashSet<string> boundAny = new(model.Construction.Parameters.Where(static p => p.Member is not null).Select(static p => p.Member!), StringComparer.Ordinal);
 
@@ -177,7 +172,7 @@ internal static class Emitter
             members.Add(new Resolved(member, members.Count, settings, jsonName, converter, required, boundAny.Contains(member.Name), $"__m{members.Count}"));
         }
 
-        if ( type.UnknownMembers == Values.UNKNOWN_CAPTURE && extension is null ) { problems.Add(DiagnosticInfo.Create(JsonDiagnostics.Contradictory, model.AttributeLocation, $"'{model.Name}' sets UnknownMembers = Capture but has no [JsonMember(ExtensionData = true)] member to capture them in")); }
+        if ( type.UnknownMembers == Values.UNKNOWN_CAPTURE && extension is null ) { problems.Add(DiagnosticInfo.Create(JsonDiagnostics.Contradictory, model.AttributeLocation, $"'{model.Name}' sets UnknownMembers = Capture but has no [JsonOverflow] (or [JsonMember(ExtensionData = true)]) member to capture them in")); }
 
         if ( extension is not null && model.Settings.UnknownMembers == Values.UNKNOWN_ERROR ) { problems.Add(DiagnosticInfo.Create(JsonDiagnostics.Contradictory, extension.Location ?? model.AttributeLocation, $"'{model.Name}' has an extension data member but UnknownMembers = Error rejects the members it would capture")); }
 
@@ -325,9 +320,6 @@ internal static class Emitter
 
             case ShapeKind.Node:
                 return $"{C}JsonNodeConverter<{name}>";
-
-            case ShapeKind.Element:
-                return $"{C}JsonElementConverter";
 
             case ShapeKind.Enum:
                 return settings.Enums == Values.ENUMS_NUMBER
@@ -561,17 +553,10 @@ internal static class Emitter
         {
             using ( code.Block($"if ( value.{Id(extension.Name)} is {{ }} __extension )") )
             {
-                string pair = extension.ExtensionElements
-                                  ? "global::System.Text.Json.JsonElement"
-                                  : "global::Jakar.Json.JNode?";
-
-                using ( code.Block($"foreach ( global::System.Collections.Generic.KeyValuePair<string, {pair}> __pair in __extension )") )
+                using ( code.Block("foreach ( global::System.Collections.Generic.KeyValuePair<string, global::Jakar.Json.JNode?> __pair in __extension )") )
                 {
                     code.Line("writer.WritePropertyName(__pair.Key);");
-
-                    code.Line(extension.ExtensionElements
-                                  ? $"{J}JsonElementConverter.Write(ref writer, __pair.Value);"
-                                  : $"{J}JNode.Write(__pair.Value, ref writer);");
+                    code.Line($"{J}JNode.Write(__pair.Value, ref writer);");
                 }
             }
         }
@@ -669,7 +654,13 @@ internal static class Emitter
 
         for ( int word = 0; word < words; word++ ) { code.Line($"ulong __seen{word} = 0;"); }
 
-        if ( extension is not null ) { code.Line($"{extension.TypeName.TrimEnd('?')}? __extension = null;"); }
+        // A get-only bag is filled after construction, so its members are captured into a plain dictionary first (a JObjectNode would adopt them).
+        if ( extension is not null )
+        {
+            code.Line(extension.Setter is SetterKind.None or SetterKind.ReadOnlyField
+                          ? "global::System.Collections.Generic.OrderedDictionary<string, global::Jakar.Json.JNode?>? __extension = null;"
+                          : $"{extension.TypeName.TrimEnd('?')}? __extension = null;");
+        }
 
         // Members usually arrive in declaration order: the reader compares the next expected name first and skips matching when it's there.
         code.Line("int __next = 0;");
@@ -735,9 +726,7 @@ internal static class Emitter
                         case Values.UNKNOWN_CAPTURE:
                             code.Line("string __key = __name.ToString();");
 
-                            code.Line(extension!.ExtensionElements
-                                          ? $"if ( !{J}JsonElementConverter.TryRead(ref reader, out global::System.Text.Json.JsonElement __captured) ) {{ return false; }}"
-                                          : $"if ( !{J}JNode.TryRead(ref reader, out {J}JNode? __captured) ) {{ return false; }}");
+                            code.Line($"if ( !{J}JNode.TryRead(ref reader, out {J}JNode? __captured) ) {{ return false; }}");
 
                             code.Line($"( __extension ??= new() )[__key] = __captured;");
                             code.Line("break;");
@@ -816,11 +805,25 @@ internal static class Emitter
             }
         }
 
-        if ( extension is not null && extension.Setter is not (SetterKind.None or SetterKind.ReadOnlyField) )
+        if ( extension is null ) { return; }
+
+        switch ( extension.Setter )
         {
-            code.Line(extension.Setter == SetterKind.Init
-                          ? $"if ( __extension is not null ) {{ __JsonInitExtension({( extension.DeclaringIsValueType ? "ref " : "" )}value, __extension); }}"
-                          : $"if ( __extension is not null ) {{ value.{Id(extension.Name)} = __extension; }}");
+            case SetterKind.Init:
+                code.Line($"if ( __extension is not null ) {{ __JsonInitExtension({( extension.DeclaringIsValueType ? "ref " : "" )}value, __extension); }}");
+                break;
+
+            case SetterKind.Set or SetterKind.Field:
+                code.Line($"if ( __extension is not null ) {{ value.{Id(extension.Name)} = __extension; }}");
+                break;
+
+            default: // get-only: the captured members go into the bag the type created (none when it's null)
+                using ( code.Block($"if ( __extension is not null && value.{Id(extension.Name)} is {{ }} __bag )") )
+                {
+                    code.Line("foreach ( global::System.Collections.Generic.KeyValuePair<string, global::Jakar.Json.JNode?> __pair in __extension ) { __bag[__pair.Key] = __pair.Value; }");
+                }
+
+                break;
         }
     }
 

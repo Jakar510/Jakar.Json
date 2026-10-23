@@ -22,4 +22,10 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Jakar.Json.FusionCache\Jakar.Json.FusionCache.csproj" />
 	</ItemGroup>
+	<!-- The [JsonModel] generator: through the referenced package in Release, the repository's generator otherwise. -->
+	<PropertyGroup>
+		<JakarJsonGeneratorOnly>true</JakarJsonGeneratorOnly>
+	</PropertyGroup>
+
+	<Import Project="..\Shared\JakarJson.props" />
 </Project>

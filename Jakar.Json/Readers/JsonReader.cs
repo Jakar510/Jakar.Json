@@ -644,9 +644,9 @@ internal static class JsonFloats
 {
     /// <summary> <c>NaN</c>, <c>Infinity</c>, <c>-Infinity</c>. <paramref name="supported"/> is <see langword="false"/> for types without them (<see cref="decimal"/>). </summary>
     public static bool TryParseNonFinite<T>( scoped in JsonSpan text, out T value, out bool supported )
-        where T : struct, IFloatingPoint<T>
+        where T : IFloatingPoint<T>
     {
-        value     = default;
+        value     = T.Zero;
         supported = typeof(T) != typeof(decimal);
 
         double special;

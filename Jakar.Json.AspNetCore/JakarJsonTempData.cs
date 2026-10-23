@@ -1,6 +1,7 @@
 // Jakar.Json.AspNetCore
 // 10/17/2026
 
+using System.Runtime.Loader;
 using Microsoft.AspNetCore.Mvc.ViewFeatures.Infrastructure;
 
 
@@ -67,10 +68,32 @@ public sealed class JakarJsonTempDataSerializer( TempDataSerializer inner ) : Te
         int    newline  = text.IndexOf('\n', MARKER.Length);
         string typeName = text[MARKER.Length..newline];
 
-        Type? type = Type.GetType(typeName, throwOnError: false);
+        Type? type = Type.GetType(typeName, ResolveAssembly, null, throwOnError: false);
         if ( type is null || !JsonCodecRegistry.TryGet(type, out JsonTypeCodec? codec) ) { throw new InvalidOperationException($"TempData holds a {typeName}, which Jakar.Json can't read here"); }
 
         return codec.Read(Encoding.UTF8.GetBytes(text, newline + 1, text.Length - newline - 1));
+    }
+
+    /// <summary>
+    ///     The assembly a stored type name refers to: the one the app's registered models come from, then whatever this assembly's load context has. <see cref="Type.GetType(string)"/>
+    ///     alone may load a second copy of the model's assembly (an isolating test runner, a contextual reflection scope), whose types the app's casts don't match.
+    /// </summary>
+    private static Assembly? ResolveAssembly( AssemblyName name )
+    {
+        AssemblyLoadContext ours  = AssemblyLoadContext.GetLoadContext(typeof(JakarJsonTempDataSerializer).Assembly) ?? AssemblyLoadContext.Default;
+        Assembly?           match = null;
+
+        foreach ( Type registered in JsonCodecRegistry.RegisteredTypes )
+        {
+            Assembly assembly = registered.Assembly;
+            if ( assembly.FullName != name.FullName ) { continue; }
+
+            if ( AssemblyLoadContext.GetLoadContext(assembly) == ours ) { return assembly; } // two registered copies: the one loaded beside this one
+
+            match ??= assembly;
+        }
+
+        return match ?? ours.LoadFromAssemblyName(name);
     }
 }
 

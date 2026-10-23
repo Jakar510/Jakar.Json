@@ -4,7 +4,7 @@ A reflection-free, allocation-free JSON serializer for .NET 10, with integration
 
 | Package | What it is |
 |---|---|
-| [Jakar.Json](./Jakar.Json/README.md) | `[JsonModel]` source-generates UTF-16 and UTF-8 readers and writers. It also includes a JSON tape, a DOM, and System.Text.Json models. It ships its source generator and code fixes. The design is in [SPEC.md](./Jakar.Json/SPEC.md). |
+| [Jakar.Json](./Jakar.Json/README.md) | `[JsonModel]` source-generates UTF-16 and UTF-8 readers and writers. It also includes a JSON tape and a DOM; no System.Text.Json dependency. It ships its source generator and code fixes. The design is in [SPEC.md](./Jakar.Json/SPEC.md). |
 
 Jakar.Json depends on [Jakar.Spans](https://github.com/Jakar510/Jakar.Spans); [Jakar.Extensions](https://github.com/Jakar510/Jakar.Extensions) builds on Jakar.Json.
 
@@ -34,6 +34,8 @@ Each integration reads and writes `[JsonModel]` types, and arrays, lists and col
 | `Jakar.Json.Tests.WebApi` | A sample ASP.NET Core app (MVC and minimal APIs) using Jakar.Json.AspNetCore. |
 | `Jakar.Json.Benchmarks` | BenchmarkDotNet: Jakar.Json vs System.Text.Json vs Newtonsoft.Json (`--filter *JakarJson*`), and a `--profile` loop for dotnet-trace. |
 | `AotCompatibility.TestApp` | Checks that Jakar.Json publishes with Native AOT and full trimming without warnings. |
+
+The integrations reference Jakar.Json through `Shared/JakarJson.props`: in **Release**, the released package at the version in `Directory.Packages.props`; in any other configuration (Debug), the `Jakar.Json` project and its generator in this repository, so changes to them are used without packing. Building or testing in Release therefore needs that Jakar.Json version on a package feed; CI and the publish workflow pack it from the same commit first.
 
 Jakar.Spans comes from NuGet. Until it's on nuget.org, `nuget.config` also reads the local feed `W:\WorkSpace\LocalNuGet`.
 

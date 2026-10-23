@@ -205,6 +205,54 @@ public sealed class GeneratorTests
         Assert.That(result.CompileErrors, Is.Empty);
     }
 
+    [Test] public void ReadOnlyMembers_Ignore_DropsComputedMembers()
+    {
+        Result result = Run(PRELUDE +
+                            """
+                            [assembly: JsonDefaults(ReadOnlyMembers = JsonReadOnlyMembers.Ignore)]
+
+                            [JsonModel] public sealed partial class A { public int Value { get; set; } public int Double => Value * 2; }
+
+                            [JsonModel(ReadOnlyMembers = JsonReadOnlyMembers.Write)] public sealed partial class B { public int Value { get; set; } public int Triple => Value * 3; }
+
+                            [JsonModel] public sealed partial class C { public int Value { get; set; } [JsonMember(ReadOnly = JsonReadOnlyMembers.Write)] public int Half => Value / 2; }
+                            """);
+
+        Assert.That(result.CompileErrors, Is.Empty, string.Join("\n", result.CompileErrors));
+        Assert.That(result.Source("A."),  Does.Not.Contain("\\\"Double\\\""), "the assembly default ignores it");
+        Assert.That(result.Source("B."),  Does.Contain("\\\"Triple\\\""),     "the type writes it again");
+        Assert.That(result.Source("C."),  Does.Contain("\\\"Half\\\""),       "the member writes it again");
+        Assert.That(result.Ids.Count(static id => id == "JJSON011"), Is.EqualTo(2), "only the written ones are reported");
+    }
+
+    [Test] public void MemberAttributes_AndCreator()
+    {
+        Result result = Run(PRELUDE +
+                            """
+                            [JsonModel]
+                            public sealed partial class A
+                            {
+                                public A() { }
+                                [JsonCreator] public A( string key ) => Key = key;
+
+                                [JsonKey("k")] public string Key { get; }
+                                [JsonOverflow] public System.Collections.Generic.OrderedDictionary<string, JNode?>? Rest { get; set; }
+                                [JsonSkip] public int Skipped { get; set; }
+                            }
+                            """);
+
+        Assert.That(result.CompileErrors,        Is.Empty, string.Join("\n", result.CompileErrors));
+        Assert.That(result.GeneratorDiagnostics, Is.Empty, string.Join("\n", result.GeneratorDiagnostics));
+        Assert.That(result.Source("A."),         Does.Contain("new global::A(__m0)"), "the [JsonCreator] constructor");
+        Assert.That(result.Source("A."),         Does.Not.Contain("Skipped"));
+    }
+
+    [Test] public void JsonOverflow_NeedsAJNodeBag()
+    {
+        Result result = Run(PRELUDE + "[JsonModel] public sealed partial class A { [JsonOverflow] public Dictionary<string, string>? Rest { get; set; } }");
+        Assert.That(result.Ids, Does.Contain("JJSON008"));
+    }
+
     [Test] public void JJSON012_NoJsonForm()
     {
         Result result = Run(PRELUDE + "[JsonModel] public sealed partial class A { public object? Any { get; set; } public Action? Callback { get; set; } }");

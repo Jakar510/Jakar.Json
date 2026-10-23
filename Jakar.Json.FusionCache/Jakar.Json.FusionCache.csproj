@@ -29,8 +29,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<!-- The released Jakar.Json (bump its version in Directory.Packages.props to use a newer one). PrivateAssets="none" passes its [JsonModel] generator on to this package's consumers and to the projects referencing this one. -->
-		<PackageReference Include="Jakar.Json" PrivateAssets="none" />
 		<PackageReference Include="ZiggyCreatures.FusionCache" />
 	</ItemGroup>
 
@@ -43,4 +41,7 @@
 		<None Include="..\LICENSE.txt" Pack="true" PackagePath="\" Visible="false" />
 		<None Include="README.md" Pack="true" PackagePath="\" />
 	</ItemGroup>
+
+	<!-- Jakar.Json: the released package in Release, the project otherwise. -->
+	<Import Project="..\Shared\JakarJson.props" />
 </Project>

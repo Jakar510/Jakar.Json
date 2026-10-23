@@ -1,14 +1,10 @@
 // Jakar.Json.Tests
 // 10/07/2026
 
-using System.Text.Json;
-
-
-
 namespace Jakar.Json.Tests;
 
 
-/// <summary> Member types that models shared with System.Text.Json need: init-only members of generic bases, <see cref="IJsonCollection{TSelf,T}"/>, and <see cref="JsonElement"/> extension data. </summary>
+/// <summary> Member types that shared models need: init-only members of generic bases, and <see cref="IJsonCollection{TSelf,T}"/>. </summary>
 [TestFixture]
 public sealed class SharedTypesTests
 {
@@ -43,25 +39,6 @@ public sealed class SharedTypesTests
         Assert.That(back.ViewBag.Builds,                             Is.EqualTo(1), "one FromJsonElements call, not one Add per element");
         Assert.That(back.Maybe!.Items,                               Is.EqualTo(new[] { 7 }));
         Assert.That(Holder.TryFromJson("""{"ViewBag":{}}""", out _), Is.False);
-    }
-
-    [Test] public void ExtensionData_DictionaryOfJsonElement()
-    {
-        const string JSON = """{"Name" : "x","extra" : {"n" : [1,2.50,1e400,"s",null,true]},"flag" : false}""";
-
-        Shared shared = Shared.FromJson(JSON);
-        Assert.That(shared.Extra!.Keys,                                     Is.EqualTo(new[] { "extra", "flag" }));
-        Assert.That(shared.Extra["extra"].GetProperty("n")[1].GetRawText(), Is.EqualTo("2.50"),  "numbers keep their text");
-        Assert.That(shared.Extra["extra"].GetProperty("n")[2].GetRawText(), Is.EqualTo("1e400"), "even beyond double");
-        Assert.That(shared.ToJson(),                                        Is.EqualTo(JSON),    "round trip");
-
-        Shared built = new()
-                       {
-                           Name  = "y",
-                           Extra = new Dictionary<string, JsonElement> { ["e"] = JsonElement.Parse("""{ "k" : [ 1 , "v" ] }""") }
-                       };
-
-        Assert.That(built.ToJson(), Is.EqualTo("""{"Name" : "y","e" : {"k" : [1,"v"]}}"""), "an element System.Text.Json parsed, written by Jakar.Json");
     }
 }
 
@@ -119,14 +96,4 @@ public sealed partial class Holder
 {
     public ViewBag  ViewBag { get; set; } = ViewBag.FromJsonElements([]);
     public ViewBag? Maybe   { get; set; }
-}
-
-
-
-[JsonModel]
-public sealed partial class Shared
-{
-    public string Name { get; set; } = "";
-
-    [JsonMember(ExtensionData = true)] public Dictionary<string, JsonElement>? Extra { get; set; }
 }

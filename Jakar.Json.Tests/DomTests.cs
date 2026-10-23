@@ -165,10 +165,26 @@ public sealed class JNodeTests
         DateTime utc = new(2026, 10, 7, 1, 2, 3, DateTimeKind.Utc);
         Assert.That((DateTime)(JNode)utc, Is.EqualTo(utc));
 
-        Assert.Throws<ArgumentOutOfRangeException>(() => _ = new JValueNode(double.NaN));
         Assert.Throws<FormatException>(() => _             = (int)JNode.Parse("1.5")!);
         Assert.Throws<InvalidCastException>(() => _        = (int)(JNode?)null);
         Assert.Throws<FormatException>(() => JValueNode.FromNumberText("01"));
+    }
+
+    [Test] public void NonFiniteFloats_AreKeptAndWrittenAsStrings()
+    {
+        Assert.That(new JValueNode(double.NaN).ToJson(),             Is.EqualTo("\"NaN\""));
+        Assert.That(new JValueNode(float.NegativeInfinity).ToJson(), Is.EqualTo("\"-Infinity\""));
+        Assert.That(new JValueNode(double.NaN).GetDouble(),          Is.NaN);
+        Assert.That(JNode.Parse("\"Infinity\"")!.AsValue().GetDouble(), Is.EqualTo(double.PositiveInfinity), "the string form reads back as a float");
+        Assert.That(JNode.Parse("\"NaN\"")!.AsValue().GetSingle(),   Is.NaN);
+        Assert.Throws<OverflowException>(() => JNode.Parse("\"NaN\"")!.AsValue().GetDecimal());
+        Assert.That(JNode.DeepEquals(new JValueNode(double.NaN), new JValueNode(float.NaN)), Is.True, "NaN nodes are equal: they hold the same JSON");
+        Assert.That(JNode.DeepEquals(new JValueNode(double.PositiveInfinity), new JValueNode(1e308)), Is.False);
+
+        JNode? tree = JNode.FromModel(new Floats { Double = double.NaN, Array = [double.PositiveInfinity] });
+        Assert.That(tree!["Double"]!.ToJson(),     Is.EqualTo("\"NaN\""));
+        Assert.That(tree["Array"]![0]!.ToJson(),   Is.EqualTo("\"Infinity\""));
+        Assert.That(tree.ToModel<Floats>().Double, Is.NaN, "and back into the model");
     }
 
     [Test] public void DuplicateNames_AreRejected()

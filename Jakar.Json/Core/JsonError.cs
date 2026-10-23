@@ -1,10 +1,6 @@
 // Jakar.Json
 // 10/07/2026
 
-using System.Text.Json;
-
-
-
 namespace Jakar.Json;
 
 
@@ -50,17 +46,22 @@ public readonly record struct JsonError( JsonErrorKind Kind, int Position, int L
 
 
 /// <summary>
-///     Malformed JSON, or JSON that doesn't match the target type. A System.Text.Json <see cref="JsonException"/>, so code that catches that keeps working whichever serializer
-///     read the JSON (a <c>[JsonModel]</c> type's <c>IJsonModel</c> members may run on either). <see cref="JsonException.Path"/>, <see cref="JsonException.LineNumber"/> and
-///     <see cref="JsonException.BytePositionInLine"/> are set (zero-based, as System.Text.Json reports them); <see cref="Error"/> has the kind and the one-based position.
+///     Malformed JSON, or JSON that doesn't match the target type. <see cref="Error"/> has the kind and the one-based position; <see cref="Path"/> the JSON path of the failure, and
+///     <see cref="LineNumber"/> / <see cref="BytePositionInLine"/> the zero-based position.
 /// </summary>
 /// <remarks> Not a <see cref="FormatException"/>: <see cref="ISpanParsable{TSelf}.Parse(ReadOnlySpan{char}, IFormatProvider?)"/> on a generated type throws this. </remarks>
-public sealed class JsonReadException( JsonError error, string? path = null ) : JsonException(Describe(error, path), path ?? "$", Math.Max(0, error.Line - 1), Math.Max(0, error.Column - 1), null)
+public sealed class JsonReadException( JsonError error, string? path = null ) : Exception(Describe(error, path))
 {
     public JsonError Error { get; } = error;
 
     /// <summary> The JSON path of the failure, e.g. <c>$.lines[3].price</c>; <c>$</c> when it isn't known. </summary>
-    public new string Path => base.Path ?? "$";
+    public string Path { get; } = path ?? "$";
+
+    /// <summary> Zero-based; 0 when there is no input. </summary>
+    public long LineNumber => Math.Max(0, Error.Line - 1);
+
+    /// <summary> Zero-based, in chars (UTF-16 input) or bytes (UTF-8 input); 0 when there is no input. </summary>
+    public long BytePositionInLine => Math.Max(0, Error.Column - 1);
 
 
     private static string Describe( JsonError error, string? path ) => path is null or "$"

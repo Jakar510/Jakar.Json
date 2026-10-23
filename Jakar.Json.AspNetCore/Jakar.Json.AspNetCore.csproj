@@ -6,13 +6,13 @@
 		<ImplicitUsings>disable</ImplicitUsings>
 		<RootNamespace>Jakar.Json.AspNetCore</RootNamespace>
 		<AssemblyName>Jakar.Json.AspNetCore</AssemblyName>
-		<Version>10.2.1</Version>
+		<Version>10.3.0</Version>
 		<Title>Jakar.Json.AspNetCore</Title>
 		<PackageId>Jakar.Json.AspNetCore</PackageId>
 		<Authors>Tyler Stegmaier</Authors>
 		<Description>Jakar.Json as ASP.NET Core's JSON serializer for [JsonModel] types: MVC input/output formatters (AddJakarJson), and for minimal APIs typed results, a request-body wrapper and an endpoint filter. Other types keep using System.Text.Json. Reflection-free.</Description>
 		<PackageTags>json aspnetcore mvc minimal-api formatter source-generator aot zero-allocation utf8</PackageTags>
-		<PackageReleaseNotes>10.2.1: built against Jakar.Json 10.2.0, whose writers take a ref TWriter; 10.2.0 calls the removed IBufferWriter overloads and throws MissingMethodException with Jakar.Json 10.2.0. 10.2.0: TempData can hold [JsonModel] values (AddJakarJsonTempData). 10.1.0: initial release.</PackageReleaseNotes>
+		<PackageReleaseNotes>10.3.0: TempData reads a stored model back as the type the app loaded, even when the model's assembly is loaded twice (an isolating test runner, a plugin host); built against Jakar.Json 10.3.0. 10.2.1: built against Jakar.Json 10.2.0, whose writers take a ref TWriter; 10.2.0 calls the removed IBufferWriter overloads and throws MissingMethodException with Jakar.Json 10.2.0. 10.2.0: TempData can hold [JsonModel] values (AddJakarJsonTempData). 10.1.0: initial release.</PackageReleaseNotes>
 		<PackageIcon>icon.png</PackageIcon>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
@@ -33,11 +33,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<!-- The released Jakar.Json (bump its version in Directory.Packages.props to use a newer one). PrivateAssets="none" passes its [JsonModel] generator on to this package's consumers and to the projects referencing this one. -->
-		<PackageReference Include="Jakar.Json" PrivateAssets="none" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<InternalsVisibleTo Include="Jakar.Json.AspNetCore.Tests" />
 	</ItemGroup>
 
@@ -46,4 +41,7 @@
 		<None Include="..\LICENSE.txt" Pack="true" PackagePath="\" Visible="false" />
 		<None Include="README.md" Pack="true" PackagePath="\" />
 	</ItemGroup>
+
+	<!-- Jakar.Json: the released package in Release, the project otherwise. -->
+	<Import Project="..\Shared\JakarJson.props" />
 </Project>

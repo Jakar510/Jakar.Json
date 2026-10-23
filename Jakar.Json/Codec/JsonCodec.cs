@@ -19,7 +19,7 @@ public static partial class JsonCodec
 
     // ─── Write ───────────────────────────────────────────────────────────────
 
-    /// <summary> <typeparamref name="T"/>'s layout with indentation on or off: <c>IJsonModel</c>'s <c>ToJson(indented)</c> for a <c>[JsonModel]</c> type that runs on Jakar.Json. </summary>
+    /// <summary> <typeparamref name="T"/>'s layout with indentation on or off: <c>ToJson(indented)</c>. </summary>
     public static string ToJson<T>( in T value, bool indented )
         where T : IJsonSerializable<T> => indented == T.DefaultWriterOptions.Indented
                                               ? ToJson(in value)
@@ -254,7 +254,7 @@ public static partial class JsonCodec
 
     // ─── Read ────────────────────────────────────────────────────────────────
 
-    /// <exception cref="JsonReadException"> The JSON is malformed, doesn't match <typeparamref name="T"/>, or its root is <c>null</c> (a System.Text.Json <c>JsonException</c>). </exception>
+    /// <exception cref="JsonReadException"> The JSON is malformed, doesn't match <typeparamref name="T"/>, or its root is <c>null</c>. </exception>
     public static T FromJson<T>( string json, JsonReaderOptions? options = null )
         where T : IJsonSerializable<T>
     {

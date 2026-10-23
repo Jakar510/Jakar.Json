@@ -54,8 +54,9 @@ public sealed class JValueNode : JNode
     public JValueNode( ulong   value ) : this(NumberKind.UInt64, value) { }
     public JValueNode( Int128  value ) : this(NumberKind.Int128, value) { }
     public JValueNode( UInt128 value ) : this(NumberKind.UInt128, unchecked ((Int128)value)) { }
-    public JValueNode( float   value ) : this(NumberKind.Single, BitConverter.SingleToInt32Bits(Finite(value))) { }
-    public JValueNode( double  value ) : this(NumberKind.Double, BitConverter.DoubleToInt64Bits(Finite(value))) { }
+    // NaN and ±Infinity are kept; JSON has no literal for them, so they're written as "NaN", "Infinity", "-Infinity" (NonFiniteFloats = AsString).
+    public JValueNode( float   value ) : this(NumberKind.Single, BitConverter.SingleToInt32Bits(value)) { }
+    public JValueNode( double  value ) : this(NumberKind.Double, BitConverter.DoubleToInt64Bits(value)) { }
     public JValueNode( decimal value ) : this(NumberKind.Decimal, Unsafe.BitCast<decimal, Int128>(value)) { }
 
     // §5.3 canonical strings.
@@ -153,10 +154,14 @@ public sealed class JValueNode : JNode
                                            _                  => throw new InvalidOperationException("The number isn't an integer.")
                                        };
 
-    /// <exception cref="OverflowException"> The value doesn't fit <typeparamref name="T"/>. </exception>
+    /// <summary> Also reads <c>"NaN"</c>, <c>"Infinity"</c> and <c>"-Infinity"</c> strings, the JSON form of non-finite floats. </summary>
+    /// <exception cref="OverflowException"> The value doesn't fit <typeparamref name="T"/> (NaN and ±Infinity don't fit <see cref="decimal"/>). </exception>
     public T GetFloat<T>()
         where T : IFloatingPoint<T> => __number switch
                                        {
+                                           NumberKind.None when __kind == JNodeKind.String && JsonFloats.TryParseNonFinite(new JsonSpan(__text), out T special, out bool supported) => supported
+                                                                                                                                                                                  ? special
+                                                                                                                                                                                  : throw new OverflowException($"{typeof(T).Name} has no {__text}."),
                                            NumberKind.Single  => T.CreateChecked(BitConverter.Int32BitsToSingle((int)__bits)),
                                            NumberKind.Double  => T.CreateChecked(BitConverter.Int64BitsToDouble((long)__bits)),
                                            NumberKind.Decimal => T.CreateChecked(Unsafe.BitCast<Int128, decimal>(__bits)),
@@ -262,6 +267,25 @@ public sealed class JValueNode : JNode
             return false;
         }
 
+        if ( __number is NumberKind.Single or NumberKind.Double )
+        {
+            double number = __number == NumberKind.Single
+                                ? BitConverter.Int32BitsToSingle((int)__bits)
+                                : BitConverter.Int64BitsToDouble((long)__bits);
+
+            if ( !double.IsFinite(number) )
+            {
+                if ( typeof(T) == typeof(decimal) )
+                {
+                    error = JsonErrorKind.NonFiniteNumber;
+                    return false;
+                }
+
+                value = T.CreateSaturating(number);
+                return true;
+            }
+        }
+
         Span<char> buffer = stackalloc char[64];
         int        length = FormatNumber(buffer);
         if ( T.TryParse(buffer[..length], NumberStyles.Float, CultureInfo.InvariantCulture, out value) && !T.IsInfinity(value) ) { return true; }
@@ -298,11 +322,6 @@ public sealed class JValueNode : JNode
                    ? throw new OverflowException($"{text} overflows the floating-point type.")
                    : value;
     }
-
-    private static T Finite<T>( T value )
-        where T : IFloatingPointIeee754<T> => T.IsFinite(value)
-                                                  ? value
-                                                  : throw new ArgumentOutOfRangeException(nameof(value), value, "JSON has no NaN or Infinity; store a string instead.");
 
     /// <summary> Invariant text of a typed number (round-trippable for floats). 64 chars fit every typed number. </summary>
     private int FormatNumber( Span<char> destination )
@@ -371,17 +390,25 @@ public sealed class JValueNode : JNode
                 break;
 
             case NumberKind.Single:
-                writer.WriteFloat(BitConverter.Int32BitsToSingle((int)__bits));
+                WriteFloat(ref writer, BitConverter.Int32BitsToSingle((int)__bits));
                 break;
 
             case NumberKind.Double:
-                writer.WriteFloat(BitConverter.Int64BitsToDouble((long)__bits));
+                WriteFloat(ref writer, BitConverter.Int64BitsToDouble((long)__bits));
                 break;
 
             case NumberKind.Decimal:
                 writer.WriteFloat(Unsafe.BitCast<Int128, decimal>(__bits));
                 break;
         }
+    }
+
+    private static void WriteFloat<TWriter, T>( ref TWriter writer, T value )
+        where TWriter : IJsonWriter, allows ref struct
+        where T : IFloatingPoint<T>
+    {
+        if ( T.IsFinite(value) ) { writer.WriteFloat(value); }
+        else { writer.WriteString(JsonNumbers.NonFiniteName(value)); }
     }
 
     public override JValueNode DeepClone() => new(this);
@@ -406,7 +433,12 @@ public sealed class JValueNode : JNode
     {
         if ( __number == other.__number && __number is NumberKind.Int64 or NumberKind.UInt64 or NumberKind.Int128 or NumberKind.UInt128 ) { return __bits == other.__bits; }
 
-        if ( TryGetDouble(out double left) && other.TryGetDouble(out double right) && left != right ) { return false; }
+        if ( TryGetDouble(out double left) && other.TryGetDouble(out double right) )
+        {
+            if ( double.IsNaN(left) || double.IsNaN(right) ) { return double.IsNaN(left) && double.IsNaN(right); } // NaN equals NaN here: the nodes hold the same JSON
+            if ( left != right ) { return false; }
+            if ( double.IsInfinity(left) ) { return true; }
+        }
 
         if ( TryGetDecimal(out decimal a) && other.TryGetDecimal(out decimal b) ) { return a == b; }
 

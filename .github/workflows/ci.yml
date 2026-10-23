@@ -32,6 +32,14 @@ jobs:
       - name: Use nuget.org only
         run: dotnet nuget remove source LocalNuGet --configfile nuget.config
 
+      # In Release the integrations reference the Jakar.Json package at the version in Directory.Packages.props, which is
+      # published by the same run that tests it: pack it from this commit and restore from there.
+      - name: Pack Jakar.Json for the integrations
+        run: dotnet pack Jakar.Json/Jakar.Json.csproj -c Release -o local-feed
+
+      - name: Use the packed Jakar.Json
+        run: dotnet nuget add source "${{ github.workspace }}/local-feed" --name LocalJakarJson --configfile nuget.config
+
       - name: Restore
         run: dotnet restore Jakar.Json.slnx
 

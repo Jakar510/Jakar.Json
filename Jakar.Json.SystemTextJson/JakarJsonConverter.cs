@@ -38,7 +38,10 @@ public sealed class JakarJsonConverter<T> : JsonConverter<T>
         }
 
         using JsonDocument document = JsonDocument.ParseValue(ref reader);
-        return (T?)__codec.Read(JsonMarshal.GetRawUtf8Value(document.RootElement));
+
+        // Hosts built on System.Text.Json catch JsonException (ASP.NET Core's 400s, message retries): Jakar.Json's own exception is translated, with its path and position.
+        try { return (T?)__codec.Read(JsonMarshal.GetRawUtf8Value(document.RootElement)); }
+        catch ( JsonReadException exception ) { throw new JsonException(exception.Message, exception.Path, exception.LineNumber, exception.BytePositionInLine, exception); }
     }
 
     public override void Write( Utf8JsonWriter writer, T value, JsonSerializerOptions options )

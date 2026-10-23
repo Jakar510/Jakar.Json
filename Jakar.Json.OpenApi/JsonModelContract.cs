@@ -19,18 +19,22 @@ public sealed record JsonModelMember( MemberInfo Member, string Name, Type Membe
 
 /// <summary>
 ///     The JSON members of <c>[JsonModel]</c> types, resolved by the rules the Jakar.Json generator applies at compile time: public properties and fields, plus members marked
-///     <c>[JsonMember]</c>, <c>[JsonPropertyName]</c> or <c>[JsonInclude]</c>; minus <c>[JsonMember(Ignore = true)]</c>, <c>[JsonIgnore]</c> and extension data; named by
-///     <c>[JsonMember(Name)]</c>, <c>[JsonPropertyName]</c>, or the naming policy from <c>[JsonModel]</c>, the type's System.Text.Json context, or <c>[assembly: JsonDefaults]</c>.
+///     <c>[JsonMember]</c>, <c>[JsonKey]</c> or <c>[JsonOptIn]</c>; minus <c>[JsonMember(Ignore = true)]</c>, <c>[JsonSkip]</c>, extension data (<c>[JsonOverflow]</c>) and, with
+///     <c>ReadOnlyMembers = Ignore</c>, get-only members no constructor binds; named by <c>[JsonMember(Name)]</c>, <c>[JsonKey]</c>, or the naming policy from <c>[JsonModel]</c> or
+///     <c>[assembly: JsonDefaults]</c>.
 /// </summary>
-/// <remarks> Settings come only from arguments written on the attributes (as in the generator), so they're read with <see cref="CustomAttributeData"/>, not attribute instances. </remarks>
+/// <remarks>
+///     Settings come only from arguments written on the attributes (as in the generator), so they're read with <see cref="CustomAttributeData"/>, not attribute instances. The
+///     attributes are kept in metadata only when the model's assembly defines <c>JAKAR_JSON_KEEP_ATTRIBUTES</c>.
+/// </remarks>
 public static class JsonModelContract
 {
-    private const string STJ = "System.Text.Json.Serialization.";
+    private const string J = "Jakar.Json.";
 
     private static readonly ConcurrentDictionary<Type, IReadOnlyList<JsonModelMember>?> __members = new();
 
 
-    /// <summary> Whether <paramref name="type"/> is a <c>[JsonModel]</c> type whose code Jakar.Json generates (not one backed by System.Text.Json only). </summary>
+    /// <summary> Whether <paramref name="type"/> is a <c>[JsonModel]</c> type whose code Jakar.Json generates. </summary>
     public static bool IsJsonModel( Type type ) => GetModelAttribute(type) is not null && type.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IJsonSerializable<>) && i.GenericTypeArguments[0] == type);
 
     /// <summary> The members Jakar.Json writes and reads for <paramref name="type"/>, in declaration order (base types first); <see langword="null"/> when it isn't a <c>[JsonModel]</c> type. </summary>
@@ -41,7 +45,8 @@ public static class JsonModelContract
 
     private static IReadOnlyList<JsonModelMember> Resolve( Type type )
     {
-        ( JsonNaming naming, bool includeFields ) = ResolveSettings(type);
+        ( JsonNaming naming, JsonReadOnlyMembers readOnly ) = ResolveSettings(type);
+        HashSet<string> bound = BoundParameters(type);
 
         // Most-derived first, so an override or 'new' member hides the base one; base members come first in the output.
         List<Type> chain = [];
@@ -58,17 +63,17 @@ public static class JsonModelContract
             {
                 if ( member is not (PropertyInfo or FieldInfo) || !names.Add(member.Name) ) { continue; }
 
-                if ( Build(member, own, naming, includeFields) is { } built ) { result.Add(( chain.Count - 1 - level, built )); }
+                if ( Build(member, own, naming, readOnly, bound) is { } built ) { result.Add(( chain.Count - 1 - level, built )); }
             }
         }
 
         return result.OrderBy(static x => x.Depth).Select(static x => x.Item2).ToArray();
     }
 
-    private static JsonModelMember? Build( MemberInfo member, bool own, JsonNaming naming, bool includeFields )
+    private static JsonModelMember? Build( MemberInfo member, bool own, JsonNaming naming, JsonReadOnlyMembers readOnly, HashSet<string> bound )
     {
         Type type;
-        bool isPublic, canRead, canWrite;
+        bool isPublic, canRead, canWrite, settable;
 
         switch ( member )
         {
@@ -80,7 +85,8 @@ public static class JsonModelContract
                 type     = property.PropertyType;
                 isPublic = getter?.IsPublic is true || setter?.IsPublic is true;
                 canRead  = getter is not null && ( own || !getter.IsPrivate );
-                canWrite = setter is not null && ( own || !setter.IsPrivate );
+                settable = setter is not null && ( own || !setter.IsPrivate );
+                canWrite = settable || bound.Contains(property.Name);
                 break;
 
             case FieldInfo field:
@@ -89,6 +95,7 @@ public static class JsonModelContract
                 type     = field.FieldType;
                 isPublic = field.IsPublic;
                 canRead  = true;
+                settable = !field.IsInitOnly;
                 canWrite = true; // readonly fields are set through [UnsafeAccessor]
                 break;
 
@@ -100,7 +107,8 @@ public static class JsonModelContract
 
         if ( !isPublic && ( !attributes.Marked || ( !own && IsPrivate(member) ) ) ) { return null; }
 
-        if ( member is FieldInfo && !includeFields && !attributes.Marked ) { return null; }
+        // Get-only members no constructor parameter binds (computed properties): written, or left out with ReadOnlyMembers = Ignore.
+        if ( !settable && !bound.Contains(member.Name) && ( attributes.ReadOnly ?? readOnly ) == JsonReadOnlyMembers.Ignore ) { return null; }
 
         return new JsonModelMember(member, attributes.Name ?? Naming.Apply(member.Name, naming), type, canRead, canWrite);
     }
@@ -112,73 +120,36 @@ public static class JsonModelContract
                                                               _              => false
                                                           };
 
-
-    /// <summary> The naming policy and field inclusion: <c>[JsonModel]</c>, then the System.Text.Json context it names (or the assembly default context), then <c>[assembly: JsonDefaults]</c>. </summary>
-    private static (JsonNaming Naming, bool IncludeFields) ResolveSettings( Type type )
+    /// <summary> Member names bound to a constructor parameter (ignoring case): the <c>[JsonCreator]</c> constructor's, otherwise every accessible constructor's. </summary>
+    private static HashSet<string> BoundParameters( Type type )
     {
-        CustomAttributeData model = GetModelAttribute(type)!;
+        ConstructorInfo[] constructors = type.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        ConstructorInfo?  creator      = constructors.FirstOrDefault(static c => c.GetCustomAttributesData().Any(static a => a.AttributeType.FullName == J + "JsonCreatorAttribute"));
 
-        Type? context = model.ConstructorArguments.Count == 1 && model.ConstructorArguments[0].Value is Type explicitContext
-                            ? explicitContext
-                            : type.Assembly.GetCustomAttributesData().FirstOrDefault(static a => a.AttributeType.FullName == "Jakar.Extensions.JsonModelContextAttribute") is { ConstructorArguments.Count: 1 } assemblyContext && model.ConstructorArguments.Count == 0 && UsesAssemblyContext(type)
-                                ? assemblyContext.ConstructorArguments[0].Value as Type
-                                : null;
+        IEnumerable<ConstructorInfo> candidates = creator is not null
+                                                      ? [creator]
+                                                      : constructors.Where(static c => c.IsPublic || c.IsAssembly);
 
-        JsonNaming? typeNaming = Named<JsonNaming>(model, "Naming");
-        if ( typeNaming is JsonNaming.Inherit ) { typeNaming = null; }
-
-        if ( context is not null )
-        {
-            ( JsonNaming contextNaming, bool includeFields ) = MirrorContext(context);
-            return ( typeNaming ?? contextNaming, includeFields );
-        }
-
-        JsonNaming? assemblyNaming = type.Assembly.GetCustomAttributesData().FirstOrDefault(static a => a.AttributeType == typeof(JsonDefaultsAttribute)) is { } defaults
-                                         ? Named<JsonNaming>(defaults, "Naming")
-                                         : null;
-
-        if ( assemblyNaming is JsonNaming.Inherit ) { assemblyNaming = null; }
-
-        return ( typeNaming ?? assemblyNaming ?? JsonNaming.AsDeclared, true );
+        return new HashSet<string>(candidates.SelectMany(static c => c.GetParameters()).Select(static p => p.Name ?? ""), StringComparer.OrdinalIgnoreCase);
     }
 
-    /// <summary> A context-less <c>[JsonModel]</c> uses the assembly's default context only when it implements <c>IJsonModel&lt;T&gt;</c> (the System.Text.Json side). </summary>
-    private static bool UsesAssemblyContext( Type type ) => type.GetInterfaces().Any(static i => i.IsGenericType && i.GetGenericTypeDefinition().FullName == "Jakar.Extensions.IJsonModel`1");
 
-    /// <summary> <c>[JsonSourceGenerationOptions]</c> on the context: Web defaults are camelCase; <c>PropertyNamingPolicy</c> and <c>IncludeFields</c> override. </summary>
-    private static (JsonNaming Naming, bool IncludeFields) MirrorContext( Type context )
+    /// <summary> The naming policy and the read-only member handling: <c>[JsonModel]</c>, then <c>[assembly: JsonDefaults]</c>. </summary>
+    private static (JsonNaming Naming, JsonReadOnlyMembers ReadOnly) ResolveSettings( Type type )
     {
-        CustomAttributeData? options = context.GetCustomAttributesData().FirstOrDefault(static a => a.AttributeType.FullName == STJ + "JsonSourceGenerationOptionsAttribute");
-        if ( options is null ) { return ( JsonNaming.AsDeclared, false ); }
+        CustomAttributeData  model    = GetModelAttribute(type)!;
+        CustomAttributeData? defaults = type.Assembly.GetCustomAttributesData().FirstOrDefault(static a => a.AttributeType == typeof(JsonDefaultsAttribute));
 
-        bool       web           = options.ConstructorArguments.Count == 1 && Convert.ToInt32(options.ConstructorArguments[0].Value) == 1;
-        JsonNaming naming        = web ? JsonNaming.CamelCase : JsonNaming.AsDeclared;
-        bool       includeFields = false;
+        JsonNaming naming = Set(Named<JsonNaming>(model, "Naming")) ?? ( defaults is null ? null : Set(Named<JsonNaming>(defaults, "Naming")) ) ?? JsonNaming.AsDeclared;
 
-        foreach ( CustomAttributeNamedArgument argument in options.NamedArguments )
-        {
-            switch ( argument.MemberName )
-            {
-                case "PropertyNamingPolicy":
-                    naming = Convert.ToInt32(argument.TypedValue.Value) switch
-                             {
-                                 1 => JsonNaming.CamelCase,
-                                 2 => JsonNaming.SnakeCaseLower,
-                                 3 => JsonNaming.SnakeCaseUpper,
-                                 4 => JsonNaming.KebabCaseLower,
-                                 5 => JsonNaming.KebabCaseUpper,
-                                 _ => naming
-                             };
+        JsonReadOnlyMembers readOnly = Set(Named<JsonReadOnlyMembers>(model, "ReadOnlyMembers")) ?? ( defaults is null ? null : Set(Named<JsonReadOnlyMembers>(defaults, "ReadOnlyMembers")) ) ?? JsonReadOnlyMembers.Write;
 
-                    break;
+        return ( naming, readOnly );
 
-                case "IncludeFields":
-                    includeFields = argument.TypedValue.Value is true;
-                    break;
-            }
-        }
-
-        return ( naming, includeFields );
+        static T? Set<T>( T? value )
+            where T : struct, Enum => value is { } v && Convert.ToInt32(v) != 0 // Inherit
+                                          ? v
+                                          : null;
     }
 
     private static T? Named<T>( CustomAttributeData attribute, string name )
@@ -194,19 +165,20 @@ public static class JsonModelContract
 
 
 
-    /// <summary> The attributes Jakar.Json reads on a member: its own, plus System.Text.Json's (as the generator does). </summary>
-    private readonly record struct Attributes( bool Ignore, bool Marked, string? Name, bool ExtensionData )
+    /// <summary> The attributes Jakar.Json reads on a member: <c>[JsonMember]</c>, whose explicit values win, and the single-purpose ones (as the generator does). </summary>
+    private readonly record struct Attributes( bool Ignore, bool Marked, string? Name, bool ExtensionData, JsonReadOnlyMembers? ReadOnly )
     {
         public static Attributes Read( MemberInfo member )
         {
-            bool    ours = false, ourIgnore = false, stjIgnore = false, marked = false, extension = false;
-            string? name = null, stjName = null;
+            bool?                memberIgnore = null, memberExtension = null;
+            bool                 skip         = false, marked = false, overflow = false;
+            string?              name         = null, key = null;
+            JsonReadOnlyMembers? readOnly     = null;
 
             foreach ( CustomAttributeData attribute in member.GetCustomAttributesData() )
             {
                 if ( attribute.AttributeType == typeof(JsonMemberAttribute) )
                 {
-                    ours   = true;
                     marked = true;
 
                     foreach ( CustomAttributeNamedArgument argument in attribute.NamedArguments )
@@ -218,11 +190,15 @@ public static class JsonModelContract
                                 break;
 
                             case "Ignore":
-                                ourIgnore = argument.TypedValue.Value is true;
+                                memberIgnore = argument.TypedValue.Value is true;
                                 break;
 
                             case "ExtensionData":
-                                extension |= argument.TypedValue.Value is true;
+                                memberExtension = argument.TypedValue.Value is true;
+                                break;
+
+                            case "ReadOnly" when argument.TypedValue.Value is { } value && Convert.ToInt32(value) != 0:
+                                readOnly = (JsonReadOnlyMembers)Convert.ToInt32(value);
                                 break;
                         }
                     }
@@ -232,37 +208,28 @@ public static class JsonModelContract
 
                 switch ( attribute.AttributeType.FullName )
                 {
-                    case STJ + "JsonPropertyNameAttribute" when attribute.ConstructorArguments.Count == 1:
-                        marked  = true;
-                        stjName = attribute.ConstructorArguments[0].Value as string;
+                    case J + "JsonKeyAttribute" when attribute.ConstructorArguments.Count == 1:
+                        marked = true;
+                        key    = attribute.ConstructorArguments[0].Value as string;
                         break;
 
-                    case STJ + "JsonExtensionDataAttribute":
-                        marked    = true;
-                        extension = true;
+                    case J + "JsonOverflowAttribute":
+                        marked   = true;
+                        overflow = true;
                         break;
 
-                    case STJ + "JsonIncludeAttribute":
+                    case J + "JsonOptInAttribute":
                         marked = true;
                         break;
 
-                    case STJ + "JsonIgnoreAttribute":
-                        // JsonIgnoreCondition: Never = 0, Always = 1 (the default), WhenWritingDefault = 2, WhenWritingNull = 3.
-                        int condition = attribute.NamedArguments.FirstOrDefault(static a => a.MemberName == "Condition").TypedValue.Value is { } c
-                                            ? Convert.ToInt32(c)
-                                            : 1;
-
-                        stjIgnore = condition == 1;
+                    case J + "JsonSkipAttribute":
+                        // JsonSkipCondition: Always = 0 (the default), WhenNull = 1, WhenDefault = 2; only Always leaves the member out of the schema.
+                        skip = attribute.NamedArguments.FirstOrDefault(static a => a.MemberName == "Condition").TypedValue.Value is not { } c || Convert.ToInt32(c) == 0;
                         break;
                 }
             }
 
-            // [JsonMember(Ignore = false)] overrides an STJ [JsonIgnore]; [JsonMember(Ignore = true)] always wins.
-            bool ignore = ours
-                              ? ourIgnore
-                              : stjIgnore;
-
-            return new Attributes(ignore, marked, name ?? stjName, extension);
+            return new Attributes(memberIgnore ?? skip, marked, name ?? key, memberExtension ?? overflow, readOnly);
         }
     }
 }

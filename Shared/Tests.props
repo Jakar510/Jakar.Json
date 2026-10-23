@@ -27,4 +27,11 @@
 		<Using Include="NUnit.Framework" />
 		<Using Include="Jakar.Json.Tests.Shared" />
 	</ItemGroup>
+
+	<!-- The [JsonModel] generator for the test models: from the package under test in Release, from the repository's generator otherwise. -->
+	<PropertyGroup>
+		<JakarJsonGeneratorOnly>true</JakarJsonGeneratorOnly>
+	</PropertyGroup>
+
+	<Import Project="$(MSBuildThisFileDirectory)JakarJson.props" />
 </Project>

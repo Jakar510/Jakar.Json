@@ -1,15 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<Version>10.2.0</Version>
-		<Description>Jakar.Json for Rebus: message bodies of [JsonModel] types are written and read by Jakar.Json inside Rebus' System.Text.Json serializer (configured with Jakar.Json.SystemTextJson).</Description>
+		<Version>10.3.0</Version>
+		<Description>Jakar.Json for Rebus: message bodies of [JsonModel] types are written and read by Jakar.Json, straight to and from the transport message; other bodies go to the serializer Rebus would otherwise use.</Description>
 		<PackageTags>json rebus messaging bus serializer source-generator</PackageTags>
-		<PackageReleaseNotes>10.2.0: built against Jakar.Json 10.2.0, whose writers take a ref TWriter; 10.1.0 calls the removed IBufferWriter overloads and throws MissingMethodException with Jakar.Json 10.2.0. 10.1.0: initial release.</PackageReleaseNotes>
+		<PackageReleaseNotes>10.3.0 (breaking): a native Rebus ISerializer (JakarJsonRebusSerializer) that decorates the configured serializer, instead of a System.Text.Json converter; UseJakarJson() no longer takes JsonSerializerOptions (configure the fallback with UseSystemTextJson first). Built against Jakar.Json 10.3.0. 10.2.0: built against Jakar.Json 10.2.0, whose writers take a ref TWriter; 10.1.0 calls the removed IBufferWriter overloads and throws MissingMethodException with Jakar.Json 10.2.0. 10.1.0: initial release.</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<Import Project="..\Shared\Integration.props" />
 
 	<ItemGroup>
 		<PackageReference Include="Rebus" />
-		<ProjectReference Include="..\Jakar.Json.SystemTextJson\Jakar.Json.SystemTextJson.csproj" />
 	</ItemGroup>
 </Project>

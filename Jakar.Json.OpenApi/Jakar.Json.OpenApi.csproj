@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<Version>10.2.0</Version>
+		<Version>10.3.0</Version>
 		<Description>OpenAPI schemas that match Jakar.Json: [JsonModel] types are described with the property names Jakar.Json writes ([JsonModel] naming, [JsonMember], System.Text.Json attributes), for Microsoft.AspNetCore.OpenApi (schema transformer) and Swashbuckle (data contract resolver).</Description>
 		<PackageTags>json openapi swagger swashbuckle aspnetcore schema source-generator</PackageTags>
-		<PackageReleaseNotes>10.2.0: built against Jakar.Json 10.2.0, whose writers take a ref TWriter; 10.1.0 calls the removed IBufferWriter overloads and throws MissingMethodException with Jakar.Json 10.2.0. 10.1.0: initial release.</PackageReleaseNotes>
+		<PackageReleaseNotes>10.3.0 (breaking): schemas follow Jakar.Json 11's member rules: [JsonKey], [JsonSkip], [JsonOptIn], [JsonOverflow], [JsonCreator] and ReadOnlyMembers; System.Text.Json attributes and contexts no longer affect [JsonModel] schemas. Built against Jakar.Json 10.3.0. 10.2.0: built against Jakar.Json 10.2.0, whose writers take a ref TWriter; 10.1.0 calls the removed IBufferWriter overloads and throws MissingMethodException with Jakar.Json 10.2.0. 10.1.0: initial release.</PackageReleaseNotes>
 		<!-- Schema generation inspects types with reflection (as both OpenAPI generators do). -->
 		<IsAotCompatible>false</IsAotCompatible>
 	</PropertyGroup>

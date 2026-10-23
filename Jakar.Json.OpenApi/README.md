@@ -2,7 +2,7 @@
 
 OpenAPI documents that describe `[JsonModel]` types with the property names [Jakar.Json](https://github.com/Jakar510/Jakar.Json/blob/master/Jakar.Json/README.md) actually writes.
 
-Both OpenAPI generators name properties from System.Text.Json's options, usually camelCase. A model's own naming can differ: a `[JsonModel(Naming = ...)]` policy, `[assembly: JsonDefaults]`, `[JsonMember(Name = ...)]`, `[JsonMember(Ignore = true)]`, or included non-public members. Without this package, the document describes names your API doesn't use.
+Both OpenAPI generators name properties from System.Text.Json's options, usually camelCase. A model's own naming can differ: a `[JsonModel(Naming = ...)]` policy, `[assembly: JsonDefaults]`, `[JsonMember(Name = ...)]` / `[JsonKey]`, `[JsonMember(Ignore = true)]` / `[JsonSkip]`, `ReadOnlyMembers = Ignore`, or included non-public members (`[JsonOptIn]`). Without this package, the document describes names your API doesn't use.
 
 ```csharp
 // Microsoft.AspNetCore.OpenApi
@@ -33,12 +33,12 @@ A model compiled without the attributes keeps System.Text.Json's description.
 
 The rules are the ones the generator applies:
 
-- **Members:** public properties and fields, plus members marked `[JsonMember]`, `[JsonPropertyName]` or `[JsonInclude]`.
-  - Excluded: `[JsonMember(Ignore = true)]`, `[JsonIgnore]` (unless `[JsonMember]` overrides it), and extension data.
+- **Members:** public properties and fields, plus members marked `[JsonMember]`, `[JsonKey]` or `[JsonOptIn]`.
+  - Excluded: `[JsonMember(Ignore = true)]`, `[JsonSkip]` (unless `[JsonMember(Ignore = false)]` overrides it), extension data (`[JsonOverflow]`), and, with `ReadOnlyMembers = Ignore` on the model, the assembly or the member, get-only members that no constructor parameter binds.
   - Base members come first. An override appears once.
 - **Names**, by precedence:
-  1. `[JsonMember(Name)]`, then `[JsonPropertyName]`.
-  2. The naming policy, from the first of these that sets one: `[JsonModel(Naming)]`, the model's System.Text.Json context (`[JsonSourceGenerationOptions]`: Web defaults, `PropertyNamingPolicy`), then `[assembly: JsonDefaults]`. With none, names are as declared.
+  1. `[JsonMember(Name)]`, then `[JsonKey]`.
+  2. The naming policy, from the first of these that sets one: `[JsonModel(Naming)]`, then `[assembly: JsonDefaults]`. With none, names are as declared.
 - **Policies:** camelCase, PascalCase, snake_case and kebab-case, lower and upper, computed exactly as the generator does.
 
 `JsonModelContract.GetMembers(type)` exposes the resolved members if you need them elsewhere.

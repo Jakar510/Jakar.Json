@@ -28,6 +28,7 @@ internal readonly record struct Settings
     public int NonFiniteFloats      { get; init; }
     public int LocalDateTimes       { get; init; }
     public int UnorderedCollections { get; init; }
+    public int ReadOnlyMembers      { get; init; }
     public int Escaping             { get; init; }
     public int Indented             { get; init; }
     public int IndentChar           { get; init; }
@@ -51,9 +52,10 @@ internal readonly record struct Settings
                                                   EnumNaming           = Values.NAMING_AS_DECLARED,
                                                   NumbersFromStrings   = 1, // Disallow
                                                   LargeIntegers        = 1, // Number
-                                                  NonFiniteFloats      = 1, // Error
+                                                  NonFiniteFloats      = Values.NON_FINITE_AS_STRING,
                                                   LocalDateTimes       = Values.LOCAL_CONVERT_TO_UTC,
                                                   UnorderedCollections = Values.ORDER_SORTED,
+                                                  ReadOnlyMembers      = Values.READ_ONLY_WRITE,
                                                   Escaping             = 1, // Minimal
                                                   Indented             = Values.OFF,
                                                   IndentChar           = 1, // Tab
@@ -81,6 +83,7 @@ internal readonly record struct Settings
                                                       NonFiniteFloats      = Pick(nearer.NonFiniteFloats,      NonFiniteFloats),
                                                       LocalDateTimes       = Pick(nearer.LocalDateTimes,       LocalDateTimes),
                                                       UnorderedCollections = Pick(nearer.UnorderedCollections, UnorderedCollections),
+                                                      ReadOnlyMembers      = Pick(nearer.ReadOnlyMembers,      ReadOnlyMembers),
                                                       Escaping             = Pick(nearer.Escaping,             Escaping),
                                                       Indented             = Pick(nearer.Indented,             Indented),
                                                       IndentChar           = Pick(nearer.IndentChar,           IndentChar),
@@ -127,6 +130,8 @@ internal readonly record struct Settings
                            "NonFiniteFloats"      => settings with { NonFiniteFloats = value },
                            "LocalDateTimes"       => settings with { LocalDateTimes = value },
                            "UnorderedCollections" => settings with { UnorderedCollections = value },
+                           "ReadOnlyMembers"      => settings with { ReadOnlyMembers = value },
+                           "ReadOnly"             => settings with { ReadOnlyMembers = value }, // [JsonMember(ReadOnly = ...)]
                            "Escaping"             => settings with { Escaping = value },
                            "Indented"             => settings with { Indented = value },
                            "IndentChar"           => settings with { IndentChar = value },
@@ -170,19 +175,17 @@ internal static class Values
     public const int ENUMS_NUMBER          = 2;
     public const int NUMBERS_ALLOW_STRINGS = 2;
     public const int LARGE_AS_STRING       = 2;
+    public const int NON_FINITE_ERROR      = 1;
     public const int NON_FINITE_AS_STRING  = 2;
     public const int LOCAL_CONVERT_TO_UTC  = 1;
     public const int LOCAL_WRITE_OFFSET    = 2;
     public const int LOCAL_ERROR           = 3;
     public const int ORDER_SORTED          = 1;
     public const int ORDER_ENUMERATION     = 2;
+    public const int READ_ONLY_WRITE       = 1;
+    public const int READ_ONLY_IGNORE      = 2;
     public const int ESCAPING_MINIMAL      = 1;
     public const int ESCAPING_ASCII_ONLY   = 2;
     public const int ESCAPING_HTML_SAFE    = 3;
     public const int INDENT_SPACE          = 2;
-
-    // JsonModelImplementation
-    public const int IMPLEMENTATION_AUTO  = 0;
-    public const int IMPLEMENTATION_STJ   = 1;
-    public const int IMPLEMENTATION_JAKAR = 2;
 }

@@ -29,10 +29,8 @@
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 	</PropertyGroup>
 
-	<ItemGroup>
-		<!-- The released Jakar.Json (bump its version in Directory.Packages.props to use a newer one). PrivateAssets="none" passes its [JsonModel] generator on to this package's consumers. -->
-		<PackageReference Include="Jakar.Json" PrivateAssets="none" />
-	</ItemGroup>
+	<!-- Jakar.Json: the released package in Release, the project otherwise. -->
+	<Import Project="$(MSBuildThisFileDirectory)JakarJson.props" />
 
 	<ItemGroup>
 		<Compile Include="$(MSBuildThisFileDirectory)*.cs" LinkBase="Shared" />

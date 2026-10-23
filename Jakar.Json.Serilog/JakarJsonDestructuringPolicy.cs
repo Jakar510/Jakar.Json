@@ -1,7 +1,7 @@
 // Jakar.Json.Serilog
 // 10/17/2026
 
-using System.Text.Json;
+using System.Numerics;
 using Serilog;
 using Serilog.Configuration;
 using Serilog.Core;
@@ -25,31 +25,48 @@ public sealed class JakarJsonDestructuringPolicy : IDestructuringPolicy
 
         using PooledBufferWriter buffer = codec.WriteToBuffer(value);
 
-        using JsonDocument document = JsonDocument.Parse(buffer.WrittenMemory);
-        result = Convert(document.RootElement, value.GetType().Name);
+        using JsonTape tape = JsonTape.Parse(buffer.WrittenSpan);
+        result = Convert(tape.Root, value.GetType().Name);
         return true;
     }
 
 
-    private static LogEventPropertyValue Convert( JsonElement element, string? typeTag ) => element.ValueKind switch
-                                                                                             {
-                                                                                                 JsonValueKind.Object => new StructureValue(element.EnumerateObject().Select(static p => new LogEventProperty(p.Name, Convert(p.Value, null))).ToArray(), typeTag),
-                                                                                                 JsonValueKind.Array  => new SequenceValue(element.EnumerateArray().Select(static e => Convert(e, null)).ToArray()),
-                                                                                                 JsonValueKind.String => new ScalarValue(element.GetString()),
-                                                                                                 JsonValueKind.Number => new ScalarValue(Number(element)),
-                                                                                                 JsonValueKind.True   => new ScalarValue(true),
-                                                                                                 JsonValueKind.False  => new ScalarValue(false),
-                                                                                                 _                    => new ScalarValue(null)
-                                                                                             };
-
-    /// <summary> An integer when the number is one, else a <see cref="decimal"/> when it fits (keeps the written digits), else a <see cref="double"/>. </summary>
-    private static object Number( JsonElement element )
+    private static LogEventPropertyValue Convert( JsonItem item, string? typeTag )
     {
-        if ( element.TryGetInt64(out long integer) ) { return integer; }
+        switch ( item.Kind )
+        {
+            case JsonTokenKind.Object:
+                List<LogEventProperty> properties = [];
+                foreach ( JsonTapeProperty property in item.EnumerateObject() ) { properties.Add(new LogEventProperty(property.GetName(), Convert(property.Value, null))); }
 
-        if ( element.TryGetDecimal(out decimal number) ) { return number; }
+                return new StructureValue(properties, typeTag);
 
-        return element.GetDouble();
+            case JsonTokenKind.Array:
+                List<LogEventPropertyValue> elements = [];
+                foreach ( JsonItem element in item.EnumerateArray() ) { elements.Add(Convert(element, null)); }
+
+                return new SequenceValue(elements);
+
+            case JsonTokenKind.String: return new ScalarValue(item.GetString());
+            case JsonTokenKind.Number: return new ScalarValue(Number(item));
+            case JsonTokenKind.True:   return new ScalarValue(true);
+            case JsonTokenKind.False:  return new ScalarValue(false);
+            default:                   return new ScalarValue(null);
+        }
+    }
+
+    /// <summary> An integer when the number is one, else a <see cref="decimal"/> when it fits (keeps the written digits), else a <see cref="double"/>; integers beyond <see cref="long"/> as <see cref="BigInteger"/>, and anything bigger as its text. </summary>
+    private static object Number( JsonItem item )
+    {
+        if ( item.TryGetInteger(out long integer) ) { return integer; }
+
+        if ( item.TryGetFloat(out decimal number) ) { return number; }
+
+        if ( item.TryGetFloat(out double floating) ) { return floating; }
+
+        return item.TryGetInteger(out BigInteger big)
+                   ? big
+                   : item.GetRawText(); // beyond double: the number as written
     }
 }
 
