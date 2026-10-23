@@ -24,8 +24,8 @@
     <PackageVersion Include="Jakar.Json" Version="10.2.0" />
     <PackageVersion Include="Jakar.Spans" Version="10.1.0" />
     <PackageVersion Include="JetBrains.Annotations" Version="2026.2.0" />
-    <PackageVersion Include="Marten" Version="9.50.3" />
-    <PackageVersion Include="MassTransit" Version="8.5.11" />
+    <PackageVersion Include="Marten" Version="9.51.0" />
+    <PackageVersion Include="MassTransit" Version="9.2.3" />
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.13" />
     <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.13" />
     <PackageVersion Include="Microsoft.AspNetCore.SignalR.Protocols.Json" Version="10.0.13" />
@@ -34,7 +34,7 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="5.9.0" />
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.13" />
-    <PackageVersion Include="Microsoft.DurableTask.Abstractions" Version="1.26.0" />
+    <PackageVersion Include="Microsoft.DurableTask.Abstractions" Version="1.27.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.13" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.13" />
     <PackageVersion Include="Microsoft.Extensions.AI.Abstractions" Version="10.11.0" />
@@ -51,18 +51,18 @@
     <PackageVersion Include="NUnit.Analyzers" Version="4.15.0" />
     <PackageVersion Include="NUnit3TestAdapter" Version="6.3.1" />
     <PackageVersion Include="OpenSearch.Client" Version="2.2.0" />
-    <PackageVersion Include="Quartz" Version="4.5.1" />
-    <PackageVersion Include="Quartz.Serialization.SystemTextJson" Version="4.5.1" />
+    <PackageVersion Include="Quartz" Version="4.6.0" />
+    <PackageVersion Include="Quartz.Serialization.SystemTextJson" Version="4.6.0" />
     <PackageVersion Include="Rebus" Version="8.9.5" />
-    <PackageVersion Include="Refit" Version="16.3.0" />
-    <PackageVersion Include="RestSharp" Version="114.0.0" />
+    <PackageVersion Include="Refit" Version="16.4.0" />
+    <PackageVersion Include="RestSharp" Version="114.1.0" />
     <PackageVersion Include="Serilog" Version="4.4.0" />
     <PackageVersion Include="StackExchange.Redis" Version="3.4.5" />
-    <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.3.0" />
-    <PackageVersion Include="Swashbuckle.AspNetCore.Swagger" Version="10.3.0" />
-    <PackageVersion Include="Swashbuckle.AspNetCore.SwaggerGen" Version="10.3.0" />
-    <PackageVersion Include="Temporalio" Version="1.20.0" />
-    <PackageVersion Include="WolverineFx" Version="6.51.0" />
+    <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.3.1" />
+    <PackageVersion Include="Swashbuckle.AspNetCore.Swagger" Version="10.3.1" />
+    <PackageVersion Include="Swashbuckle.AspNetCore.SwaggerGen" Version="10.3.1" />
+    <PackageVersion Include="Temporalio" Version="1.21.0" />
+    <PackageVersion Include="WolverineFx" Version="6.51.2" />
     <PackageVersion Include="ZiggyCreatures.FusionCache" Version="2.9.0" />
   </ItemGroup>
 </Project>
