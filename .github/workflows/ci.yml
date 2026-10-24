@@ -40,8 +40,9 @@ jobs:
       - name: Use the packed Jakar.Json
         run: dotnet nuget add source "${{ github.workspace }}/local-feed" --name LocalJakarJson --configfile nuget.config
 
+      # Restore in Release, like the build: the configuration decides whether the integrations get the package or the project (Shared/JakarJson.props).
       - name: Restore
-        run: dotnet restore Jakar.Json.slnx
+        run: dotnet restore Jakar.Json.slnx -p:Configuration=Release
 
       - name: Build
         run: dotnet build Jakar.Json.slnx -c Release --no-restore
